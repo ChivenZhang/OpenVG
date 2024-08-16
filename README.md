@@ -1,0 +1,16 @@
+### 需求列表
+- [ ] path.moveTo
+- [ ] path.lineTo
+- [ ] path.fill
+- [ ] path.gradient
+- [ ] path.stroke
+- [ ] path.strokeFill
+- [ ] path.strokeJoin
+- [ ] path.strokeCap
+- [ ] path.strokeDash
+- [ ] path.translate
+- [ ] path.scale
+- [ ] path.rotate
+- [ ] path.image
+- [ ] path.text
+- [ ] path.font
