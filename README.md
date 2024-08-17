@@ -1,3 +1,10 @@
+
+# 整体设计
+
+<div align="center">
+  <img src="Pattern.png" style="width:50%;" alt="描述文字" />
+</div>
+
 ### 需求列表
 - [ ] path.moveTo
 - [ ] path.lineTo
