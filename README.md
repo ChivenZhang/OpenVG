@@ -1,4 +1,10 @@
 
+# 详细设计
+
+<div align="center">
+  <img src="Design.png" style="width:50%;" alt="描述文字" />
+</div>
+
 # 整体设计
 
 <div align="center">
