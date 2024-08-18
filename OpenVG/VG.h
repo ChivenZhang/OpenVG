@@ -206,3 +206,22 @@ inline constexpr uint32_t VGHash(VGCString value)
 }
 
 // ============================================
+
+struct VGPoint
+{
+	float X, Y;
+};
+
+enum class VGPointType
+{
+	Close = 0, ///< Ends the current sub-path and connects it with its initial point. This command doesn't expect any points.
+	MoveTo,    ///< Sets a new initial point of the sub-path and a new current point. This command expects 1 point: the starting position.
+	LineTo,    ///< Draws a line from the current point to the given point and sets a new value of the current point. This command expects 1 point: the end-position of the line.
+	CubicTo,   ///< Draws a cubic Bezier curve from the current point to the given point using two given control points and sets a new value of the current point. This command expects 3 points: the 1st control-point, the 2nd control-point, the end-point of the curve.
+};
+
+struct VGPrimitive
+{
+	VGVector<VGPoint> PointList;
+	VGVector<VGPointType> TypeList;
+};
