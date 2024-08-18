@@ -1,0 +1,3 @@
+[submodule "External/OpenUI"]
+	path = External/OpenUI
+	url = https://github.com/ChivenZhang/OpenUI.git
