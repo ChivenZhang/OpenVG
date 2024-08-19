@@ -212,7 +212,7 @@ struct VGPoint
 	float X, Y;
 };
 
-enum class VGPointType
+enum class VGPointType : uint8_t
 {
 	Close = 0, ///< Ends the current sub-path and connects it with its initial point. This command doesn't expect any points.
 	MoveTo,    ///< Sets a new initial point of the sub-path and a new current point. This command expects 1 point: the starting position.
@@ -224,4 +224,29 @@ struct VGPrimitive
 {
 	VGVector<VGPoint> PointList;
 	VGVector<VGPointType> TypeList;
+};
+
+struct VGColor
+{
+	float R = 0, B = 0, G = 0, A = 0;
+};
+
+struct VGColorStop
+{
+	float Offset = 0;
+	float R = 0, B = 0, G = 0, A = 0;
+};
+
+enum class VGStrokeCap : uint8_t
+{
+	Square = 0, ///< The stroke is extended in both end-points of a sub-path by a rectangle, with the width equal to the stroke width and the length equal to the half of the stroke width. For zero length sub-paths the square is rendered with the size of the stroke width.
+	Round,      ///< The stroke is extended in both end-points of a sub-path by a half circle, with a radius equal to the half of a stroke width. For zero length sub-paths a full circle is rendered.
+	Butt        ///< The stroke ends exactly at each of the two end-points of a sub-path. For zero length sub-paths no stroke is rendered.
+};
+
+enum class VGStrokeJoin : uint8_t
+{
+	Bevel = 0, ///< The outer corner of the joined path segments is bevelled at the join point. The triangular region of the corner is enclosed by a straight line between the outer corners of each stroke.
+	Round,     ///< The outer corner of the joined path segments is rounded. The circular region is centered at the join point.
+	Miter      ///< The outer corner of the joined path segments is spiked. The spike is created by extension beyond the join point of the outer edges of the stroke until they intersect. In case the extension goes beyond the limit, the join style is converted to the Bevel style.
 };
