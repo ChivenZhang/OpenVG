@@ -316,32 +316,44 @@ enum class VGStrokeJoin : uint8_t
 	Miter      ///< The outer corner of the joined path segments is spiked. The spike is created by extension beyond the join point of the outer edges of the stroke until they intersect. In case the extension goes beyond the limit, the join style is converted to the Bevel style.
 };
 
-struct VGFillStyle
-{
-	VGColor Color;
-	VGImage Image;
-	VGGradientRef Gradient;
-};
-using VGFillStyleRef = VGRef<VGFillStyle>;
-
-struct VGStrokeStyle
-{
-	VGColor Color;
-	VGImage Image;
-	VGGradientRef Gradient;
-	VGStrokeCap LineCap;
-	VGStrokeJoin LineJoin;
-	float LineWidth = 0;
-	float MiterLimit = 4;
-	float DashOffset = 0;
-	VGVector<float> DashControl;
-};
-using VGStrokeStyleRef = VGRef<VGStrokeStyle>;
-
 struct VGPrimitive
 {
-	VGVector<VGPoint> PointList;
-	VGVector<VGPointType> TypeList;
-	VGFillStyleRef FillStyle;
-	VGStrokeStyleRef StrokeStyle;
+	static constexpr int MAX_STOP_COUNT = 16;
+	struct fill_t
+	{
+		float Color[4];
+		uint32_t Flags;
+		uint32_t Image;
+		uint32_t Linear;
+		uint32_t Radial;
+	};
+	struct stroke_t
+	{
+		float Color[4];
+		uint32_t Flags;
+		uint32_t Image;
+		uint32_t Linear;
+		uint32_t Radial;
+	};
+	struct linear_t
+	{
+		VGFloat4  NumStops;
+		VGFloat2  GradStartPos;
+		VGFloat2  GradEndPos;
+		VGFloat4  StopPoints[MAX_STOP_COUNT / 4];
+		VGFloat4  StopColors[MAX_STOP_COUNT];
+	};
+	struct radial_t
+	{
+		VGFloat4  NumStops;
+		VGFloat2  CenterPos;
+		VGFloat2  Radius;
+		VGFloat4  StopPoints[MAX_STOP_COUNT / 4];
+		VGFloat4  StopColors[MAX_STOP_COUNT];
+	};
+
+	float X = 0, Y = 0;
+	uint32_t Fill = -1, Stroke = -1;
 };
+using VGPrimitiveRef = VGRef<VGPrimitive>;
+using VGPrimitiveRaw = VGRaw<VGPrimitive>;
