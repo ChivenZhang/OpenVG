@@ -207,9 +207,73 @@ inline constexpr uint32_t VGHash(VGCString value)
 
 // ============================================
 
+struct VGFloat2
+{
+	float X = 0, Y = 0;
+};
+
+inline bool operator ==(VGFloat2 const& a, VGFloat2 const& b)
+{
+	return a.X == b.X && a.Y == b.Y;
+}
+
+struct VGFloat3
+{
+	float X = 0, Y = 0, Z = 0;
+};
+
+inline bool operator ==(VGFloat3 const& a, VGFloat3 const& b)
+{
+	return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+}
+
+struct VGFloat4
+{
+	float X = 0, Y = 0, Z = 0, W = 0;
+};
+
+inline bool operator ==(VGFloat4 const& a, VGFloat4 const& b)
+{
+	return a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
+}
+
+struct VGFloat2x2
+{
+	VGFloat2 X, Y;
+};
+
+inline bool operator ==(VGFloat2x2 const& a, VGFloat2x2 const& b)
+{
+	return a.X == b.X && a.Y == b.Y;
+}
+
+struct VGFloat3x3
+{
+	VGFloat3 X, Y, Z;
+};
+
+inline bool operator ==(VGFloat3x3 const& a, VGFloat3x3 const& b)
+{
+	return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+}
+
+struct VGFloat4x4
+{
+	VGFloat4 X, Y, Z, W;
+};
+
+inline bool operator ==(VGFloat4x4 const& a, VGFloat4x4 const& b)
+{
+	return a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
+}
+struct VGRect
+{
+	float X = 0, Y = 0, W = 0, H = 0;
+};
+
 struct VGPoint
 {
-	float X, Y;
+	float X = 0, Y = 0;
 };
 
 enum class VGPointType : uint8_t
@@ -218,12 +282,6 @@ enum class VGPointType : uint8_t
 	MoveTo,    ///< Sets a new initial point of the sub-path and a new current point. This command expects 1 point: the starting position.
 	LineTo,    ///< Draws a line from the current point to the given point and sets a new value of the current point. This command expects 1 point: the end-position of the line.
 	CubicTo,   ///< Draws a cubic Bezier curve from the current point to the given point using two given control points and sets a new value of the current point. This command expects 3 points: the 1st control-point, the 2nd control-point, the end-point of the curve.
-};
-
-struct VGPrimitive
-{
-	VGVector<VGPoint> PointList;
-	VGVector<VGPointType> TypeList;
 };
 
 struct VGColor
@@ -237,6 +295,13 @@ struct VGColorStop
 	float R = 0, B = 0, G = 0, A = 0;
 };
 
+struct VGImage
+{
+	uint32_t Width = 0, Height = 0, Stride = 0;
+	VGArrayView<const uint8_t> Data;
+};
+using VGImageRaw = VGRaw<VGImage>;
+
 enum class VGStrokeCap : uint8_t
 {
 	Square = 0, ///< The stroke is extended in both end-points of a sub-path by a rectangle, with the width equal to the stroke width and the length equal to the half of the stroke width. For zero length sub-paths the square is rendered with the size of the stroke width.
@@ -249,4 +314,34 @@ enum class VGStrokeJoin : uint8_t
 	Bevel = 0, ///< The outer corner of the joined path segments is bevelled at the join point. The triangular region of the corner is enclosed by a straight line between the outer corners of each stroke.
 	Round,     ///< The outer corner of the joined path segments is rounded. The circular region is centered at the join point.
 	Miter      ///< The outer corner of the joined path segments is spiked. The spike is created by extension beyond the join point of the outer edges of the stroke until they intersect. In case the extension goes beyond the limit, the join style is converted to the Bevel style.
+};
+
+struct VGFillStyle
+{
+	VGColor Color;
+	VGImage Image;
+	VGGradientRef Gradient;
+};
+using VGFillStyleRef = VGRef<VGFillStyle>;
+
+struct VGStrokeStyle
+{
+	VGColor Color;
+	VGImage Image;
+	VGGradientRef Gradient;
+	VGStrokeCap LineCap;
+	VGStrokeJoin LineJoin;
+	float LineWidth = 0;
+	float MiterLimit = 4;
+	float DashOffset = 0;
+	VGVector<float> DashControl;
+};
+using VGStrokeStyleRef = VGRef<VGStrokeStyle>;
+
+struct VGPrimitive
+{
+	VGVector<VGPoint> PointList;
+	VGVector<VGPointType> TypeList;
+	VGFillStyleRef FillStyle;
+	VGStrokeStyleRef StrokeStyle;
 };

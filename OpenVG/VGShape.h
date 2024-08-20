@@ -7,7 +7,6 @@ struct VGFillStyle
 {
 	VGColor Color;
 	VGGradientRef Gradient;
-	// VGPatternRef Pattern;
 };
 using VGFillStyleRaw = VGRaw<VGFillStyle>;
 
@@ -15,7 +14,6 @@ struct VGStrokeStyle
 {
 	VGColor Color;
 	VGGradientRef Gradient;
-	// VGPatternRef Pattern;
 	VGStrokeCap LineCap;
 	VGStrokeJoin LineJoin;
 	float LineWidth = 0;

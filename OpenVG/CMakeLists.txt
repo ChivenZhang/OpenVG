@@ -26,6 +26,6 @@ add_library (OpenVG SHARED
 	Private/VGPainter.cpp
 	Private/VGGradient.cpp
 	Private/VGStroke.cpp
-)
+ )
 
 target_include_directories(OpenVG PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
