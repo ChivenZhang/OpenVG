@@ -1,3 +1,6 @@
 [submodule "External/OpenUI"]
 	path = External/OpenUI
 	url = https://github.com/ChivenZhang/OpenUI.git
+[submodule "External/libtess2"]
+	path = External/libtess2
+	url = https://github.com/memononen/libtess2.git
