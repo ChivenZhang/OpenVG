@@ -11,16 +11,22 @@ public:
 	VGContextRef Context;
 	uint32_t NativeFrame;
 	uint32_t NativeTexture;
+	UIPen Pen;
+	UIFont Font;
+	UIBrush Brush;
+	UIRect CilpRect;
+	bool EnableCilp = false;
 };
 #define PRIVATE() ((OpenUIPainterPrivate*) m_Private)
+#define CONTEXT() (PRIVATE()->Context)
 
 OpenUIPainter::OpenUIPainter(uint32_t width, uint32_t height)
 {
 	m_Private = new OpenUIPainterPrivate;
 	PRIVATE()->Context = VGNew<VGContext>();
-	PRIVATE()->Context->setPainter(VGNew<VGPainter>());
+	CONTEXT()->setPainter(VGNew<VGPainter>());
 	auto render = VGNew<OpenVGRender>();
-	PRIVATE()->Context->setRender(render);
+	CONTEXT()->setRender(render);
 
 	PRIVATE()->NativeTexture = 0;
 	glGenTextures(1, &PRIVATE()->NativeTexture);
@@ -105,6 +111,20 @@ void OpenUIPainter::drawPolyline(UIArrayView<UIPoint> points)
 
 void OpenUIPainter::drawRect(float x, float y, float width, float height)
 {
+	auto shape = VGNew<VGElement>();
+	shape->moveTo(x, y);
+	shape->lineTo(x + width, y);
+	shape->lineTo(x + width, y + height);
+	shape->lineTo(x, y + height);
+	shape->close();
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		CONTEXT()->fillElement(shape);
+	}
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		CONTEXT()->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawRects(UIArrayView<UIRect> rects)
@@ -206,11 +226,6 @@ void OpenUIPainter::resize(uint32_t width, uint32_t height)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void OpenUIPainter::setTexture(uint32_t value)
-{
-	PRIVATE()->NativeTexture = value;
-}
-
 uint32_t OpenUIPainter::getTexture() const
 {
 	auto client = PRIVATE()->Client;
@@ -221,4 +236,8 @@ uint32_t OpenUIPainter::getTexture() const
 	PRIVATE()->Context->renderElement(PRIVATE()->Client);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return PRIVATE()->NativeTexture;
+}
+
+void OpenUIPainter::setTexture(uint32_t value)
+{
 }

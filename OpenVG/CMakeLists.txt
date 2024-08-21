@@ -25,6 +25,9 @@ add_library (OpenVG SHARED
 	Private/VGPainter.cpp
 	Private/VGGradient.cpp
 	Private/VGStroke.cpp
- )
+	Private/VGPath.cpp "Private/VGPath.cpp"
+	Private/VGPath.h
+)
 
 target_include_directories(OpenVG PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(OpenVG libtess2)

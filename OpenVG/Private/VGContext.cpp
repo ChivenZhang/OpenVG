@@ -40,16 +40,19 @@ void VGContext::setRender(VGRenderRef value)
 
 void VGContext::clipElement(VGElementRef value)
 {
+	if (PRIVATE()->Render == nullptr) return;
 	PRIVATE()->Painter->clip(value.get());
 }
 
 void VGContext::fillElement(VGElementRef value)
 {
+	if (PRIVATE()->Render == nullptr) return;
 	PRIVATE()->Painter->fill(value.get());
 }
 
 void VGContext::strokeElement(VGElementRef value)
 {
+	if (PRIVATE()->Render == nullptr) return;
 	PRIVATE()->Painter->stroke(value.get());
 }
 
