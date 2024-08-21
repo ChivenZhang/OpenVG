@@ -56,40 +56,39 @@ OpenVGRender::OpenVGRender()
 		layout (binding = 0) uniform sampler2D TextureList[16];
 )";
 
-		auto VSOURCE = R"(
-		#version 450
-		layout (location = 0) in vec2 _point;
-		layout (location = 1) in uvec2 _style;
-		out vec2 uv;
-		flat out uint fillStyle;
-		flat out uint strokeStyle;
-		)" COMMON R"(
-		void main()
-		{
-			fillStyle = _style.x;
-			strokeStyle = _style.y;
-			uv = vec2(_point.x, 1.0-_point.y);
-			gl_Position = vec4(2*_point-1, 0.0, 1.0);
-		}
-	)";
+		auto vsource = R"(
+			#version 450
+			layout (location = 0) in vec2 _point;
+			layout (location = 1) in uvec2 _style;
+			out vec2 uv;
+			flat out uint fillStyle;
+			flat out uint strokeStyle;
+			)" COMMON R"(
+			void main()
+			{
+				fillStyle = _style.x;
+				strokeStyle = _style.y;
+				uv = vec2(_point.x, 1.0-_point.y);
+				gl_Position = vec4(2*_point-1, 0.0, 1.0);
+			}
+		)";
 
-		auto FSOURCE = R"(
-		#version 450
-		in vec2 uv;
-		flat in uint fillStyle;
-		flat in uint strokeStyle;
-		layout (location = 0) out vec4 color;
-		layout (binding = 0) uniform sampler2D textureList[16];
-		)" COMMON R"(
-		void main()
-		{
-			color = vec4(1,1,0,1);
-		}
-	)";
+		auto fsource = R"(
+			#version 450
+			in vec2 uv;
+			flat in uint fillStyle;
+			flat in uint strokeStyle;
+			layout (location = 0) out vec4 color;
+			)" COMMON R"(
+			void main()
+			{
+				color = vec4(1,1,0,1);
+			}
+		)";
 
 		// 检查编译错误 
 		auto vshader = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vshader, 1, &VSOURCE, NULL);
+		glShaderSource(vshader, 1, &vsource, NULL);
 		glCompileShader(vshader);
 		GLint success;
 		glGetShaderiv(vshader, GL_COMPILE_STATUS, &success);
@@ -104,7 +103,7 @@ OpenVGRender::OpenVGRender()
 
 		// 检查编译错误 
 		auto fshader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fshader, 1, &FSOURCE, NULL);
+		glShaderSource(fshader, 1, &fsource, NULL);
 		glCompileShader(fshader);
 		glGetShaderiv(fshader, GL_COMPILE_STATUS, &success);
 		if (!success)

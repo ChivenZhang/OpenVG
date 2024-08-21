@@ -1,6 +1,7 @@
 #pragma once
 #include "VGGradient.h"
 class VGContext;
+class VGTessellate;
 
 /// @brief 
 struct VGFillStyle
@@ -70,7 +71,6 @@ public:
 private:
 	VGFillStyleRaw getFillStyle() const;
 	VGStrokeStyleRaw getStrokeStyle() const;
-
 	VGArrayView<VGPoint> getPointList() const;
 	VGArrayView<VGPointType> getPointTypeList() const;
 
@@ -86,6 +86,7 @@ protected:
 
 	friend class VGContext;
 	friend class VGPainter;
+	friend class VGTessellate;
 };
 using VGElementRef = VGRef<VGElement>;
 using VGElementRaw = VGRaw<VGElement>;
