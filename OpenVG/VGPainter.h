@@ -1,5 +1,6 @@
 #pragma once
 #include "VGElement.h"
+class VGContext;
 
 /// @brief 
 class VGPainterPrivate
@@ -14,16 +15,20 @@ class OPENVG_API VGPainter
 {
 public:
 	VGPainter();
-	virtual ~VGPainter();
+	~VGPainter();
 
-	virtual void clip(VGElementRaw element);
-	virtual void fill(VGElementRaw element);
-	virtual void stroke(VGElementRaw element);
+	void clip(VGElementRaw element);
+	void fill(VGElementRaw element);
+	void stroke(VGElementRaw element);
 
-	virtual VGArrayView<const VGPrimitive> getPrimitiveList() const;
+private:
+	VGVector<VGPrimitive>& getPrimitiveList();
+	VGVector<VGPrimitive> const& getPrimitiveList() const;
 
 private:
 	VGPainterPrivateRaw m_Private;
+
+	friend class VGContext;
 };
 using VGPainterRef = VGRef<VGPainter>;
 using VGPainterRaw = VGRaw<VGPainter>;

@@ -96,6 +96,8 @@ OpenUIRender::OpenUIRender()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, Image));
 	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
 	m_NativePrimitive = vao;

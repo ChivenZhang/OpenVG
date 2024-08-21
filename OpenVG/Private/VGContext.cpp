@@ -65,5 +65,6 @@ void VGContext::renderElement(VGRect client)
 	if (getPainter() && getRender())
 	{
 		getRender()->render(client, getPainter()->getPrimitiveList());
+		getPainter()->getPrimitiveList().clear();
 	}
 }

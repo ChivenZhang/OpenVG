@@ -50,6 +50,12 @@ public:
 	void close();
 	void reset();
 
+	VGColor getFillColor() const;
+	void setFillColor(VGColor value);
+
+	VGColor getStrokeColor() const;
+	void setStrokeColor(VGColor value);
+
 	float getLineWidth() const;
 	void setLineWidth(float value);
 

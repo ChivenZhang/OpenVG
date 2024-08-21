@@ -275,6 +275,7 @@ struct VGPoint
 {
 	float X = 0, Y = 0;
 };
+static const VGPoint VGNonePoint{ FLT_MAX, FLT_MAX };
 
 enum class VGPointType : uint8_t
 {
@@ -286,13 +287,13 @@ enum class VGPointType : uint8_t
 
 struct VGColor
 {
-	float R = 0, B = 0, G = 0, A = 0;
+	float R = 0, G = 0, B = 0, A = 0;
 };
 
 struct VGColorStop
 {
 	float Offset = 0;
-	float R = 0, B = 0, G = 0, A = 0;
+	float R = 0, G = 0, B = 0, A = 0;
 };
 
 struct VGImage
@@ -322,18 +323,18 @@ struct VGPrimitive
 	struct fill_t
 	{
 		VGColor Color;
-		uint32_t Flags;
-		uint32_t Image;
-		uint32_t Linear;
-		uint32_t Radial;
+		int32_t Flags = 0;
+		int32_t Image = -1;
+		int32_t Linear = -1;
+		int32_t Radial = -1;
 	};
 	struct stroke_t
 	{
 		VGColor Color;
-		uint32_t Flags;
-		uint32_t Image;
-		uint32_t Linear;
-		uint32_t Radial;
+		int32_t Flags = 0;
+		int32_t Image = -1;
+		int32_t Linear = -1;
+		int32_t Radial = -1;
 	};
 	struct linear_t
 	{
@@ -354,7 +355,7 @@ struct VGPrimitive
 	struct primitive_t
 	{
 		float X = 0, Y = 0;
-		uint32_t Fill = -1, Stroke = -1;
+		int32_t Fill = -1, Stroke = -1;
 	};
 	using image_t = VGImage;
 

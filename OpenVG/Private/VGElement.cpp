@@ -1,6 +1,10 @@
 #include "VGElement.h"
 #include "VGElement.h"
 #include "VGElement.h"
+#include "VGElement.h"
+#include "VGElement.h"
+#include "VGElement.h"
+#include "VGElement.h"
 #include "../VGElement.h"
 
 class VGElementPrivateData : public VGElementPrivate
@@ -62,63 +66,99 @@ void VGElement::reset()
 	PRIVATE()->PointTypeList.clear();
 }
 
+VGColor VGElement::getFillColor() const
+{
+	if (PRIVATE()->FillStyle == nullptr) return VGColor();
+	return PRIVATE()->FillStyle->Color;
+}
+
+void VGElement::setFillColor(VGColor value)
+{
+	if (PRIVATE()->FillStyle == nullptr) PRIVATE()->FillStyle = VGNew<VGFillStyle>();
+	PRIVATE()->FillStyle->Color = value;
+}
+
+VGColor VGElement::getStrokeColor() const
+{
+	if (PRIVATE()->StrokeStyle == nullptr) return VGColor();
+	return PRIVATE()->StrokeStyle->Color;
+}
+
+void VGElement::setStrokeColor(VGColor value)
+{
+	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
+	PRIVATE()->StrokeStyle->Color = value;
+}
+
 float VGElement::getLineWidth() const
 {
+	if (PRIVATE()->StrokeStyle == nullptr) return float();
 	return PRIVATE()->StrokeStyle->LineWidth;
 }
 
 void VGElement::setLineWidth(float value)
 {
+	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->LineWidth = value;
 }
 
 float VGElement::getDashOffset() const
 {
+	if (PRIVATE()->StrokeStyle == nullptr) return float();
 	return PRIVATE()->StrokeStyle->DashOffset;
 }
 
 void VGElement::setDashOffset(float value)
 {
+	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->DashOffset = value;
 }
 
 float VGElement::getMiterLimit() const
 {
+	if (PRIVATE()->StrokeStyle == nullptr) return float();
 	return PRIVATE()->StrokeStyle->MiterLimit;
 }
 
 void VGElement::setMiterLimit(float value)
 {
+	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->MiterLimit = value;
 }
 
 VGStrokeCap VGElement::getLineCap() const
 {
+	if (PRIVATE()->StrokeStyle == nullptr) return VGStrokeCap::Square;
 	return PRIVATE()->StrokeStyle->LineCap;
 }
 
 void VGElement::setLineCap(VGStrokeCap value)
 {
+	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->LineCap = value;
 }
 
 VGStrokeJoin VGElement::getLineJoin() const
 {
+	if (PRIVATE()->StrokeStyle == nullptr) return VGStrokeJoin::Bevel;
 	return PRIVATE()->StrokeStyle->LineJoin;
 }
 
 void VGElement::setLineJoin(VGStrokeJoin value)
 {
+	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->LineJoin = value;
 }
 
 VGArrayView<const float> VGElement::getDashControl() const
 {
+	if (PRIVATE()->StrokeStyle == nullptr) return VGArrayView<const float>();
 	return PRIVATE()->StrokeStyle->DashControl;
 }
 
 void VGElement::setDashControl(VGVector<float> value)
 {
+	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->DashControl = value;
 }
 

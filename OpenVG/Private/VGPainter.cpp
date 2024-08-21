@@ -1,3 +1,5 @@
+#include "VGPainter.h"
+#include "VGPainter.h"
 #include "../VGPainter.h"
 #include "VGTessellate.h"
 
@@ -27,23 +29,23 @@ void VGPainter::clip(VGElementRaw element)
 		VGVector<VGTessellate::index_t> indies;
 		if (VGTessellate::Fill(element, points, indies))
 		{
-			auto fillIndex = (uint32_t)cache->FillStyle.size();
-			auto strokeIndex = (uint32_t)-1;
-			auto imageIndex = (uint32_t)cache->ImageList.size();
+			auto fillIndex = (int32_t)cache->FillStyle.size();
+			auto strokeIndex = (int32_t)-1;
+			auto imageIndex = (int32_t)cache->ImageList.size();
 			auto& primitives = cache->Primitive;
 			auto& fills = cache->FillStyle;
 			auto& strokes = cache->StrokeStyle;
 			auto& images = cache->ImageList;
 			auto& linears = cache->LinearGradient;
 			auto& radials = cache->RadialGradient;
-			for (size_t i = 0; i + 3 < indies.size(); i += 3)
+			for (size_t i = 0; i + 3 <= indies.size(); i += 3)
 			{
 				auto index0 = indies[i + 0];
 				auto index1 = indies[i + 1];
 				auto index2 = indies[i + 2];
-				auto point0 = points[i + 0];
-				auto point1 = points[i + 1];
-				auto point2 = points[i + 2];
+				auto point0 = points[index0];
+				auto point1 = points[index1];
+				auto point2 = points[index2];
 				auto& primitive0 = primitives.emplace_back();
 				primitive0 = { point0.X, point0.Y, fillIndex, strokeIndex };
 				auto& primitive1 = primitives.emplace_back();
@@ -54,8 +56,8 @@ void VGPainter::clip(VGElementRaw element)
 
 			auto style = element->getFillStyle();
 			auto& fill = fills.emplace_back();
-			fill.Color = style->Color;
-			if (style->Image.Data.size())
+			if (style) fill.Color = style->Color;
+			if (style && style->Image.Data.size())
 			{
 				auto& image = images.emplace_back();
 				image = style->Image;
@@ -65,7 +67,7 @@ void VGPainter::clip(VGElementRaw element)
 			{
 				fill.Image = -1;
 			}
-			if (VGCast<VGLinearGradient>(style->Gradient))
+			if (style && VGCast<VGLinearGradient>(style->Gradient))
 			{
 				auto gradient = VGCast<VGLinearGradient>(style->Gradient).get();
 				auto& linear = linears.emplace_back();
@@ -91,7 +93,7 @@ void VGPainter::clip(VGElementRaw element)
 					linear.NumStops.X = 0;
 				}
 			}
-			if (VGCast<VGRadialGradient>(style->Gradient))
+			if (style && VGCast<VGRadialGradient>(style->Gradient))
 			{
 				auto gradient = VGCast<VGRadialGradient>(style->Gradient).get();
 				auto& radial = radials.emplace_back();
@@ -131,23 +133,23 @@ void VGPainter::fill(VGElementRaw element)
 		VGVector<VGTessellate::index_t> indies;
 		if (VGTessellate::Fill(element, points, indies))
 		{
-			auto fillIndex = (uint32_t)cache->FillStyle.size();
-			auto strokeIndex = (uint32_t)-1;
-			auto imageIndex = (uint32_t)cache->ImageList.size();
+			auto fillIndex = (int32_t)cache->FillStyle.size();
+			auto strokeIndex = (int32_t)-1;
+			auto imageIndex = (int32_t)cache->ImageList.size();
 			auto& primitives = cache->Primitive;
 			auto& fills = cache->FillStyle;
 			auto& strokes = cache->StrokeStyle;
 			auto& images = cache->ImageList;
 			auto& linears = cache->LinearGradient;
 			auto& radials = cache->RadialGradient;
-			for (size_t i = 0; i + 3 < indies.size(); i += 3)
+			for (size_t i = 0; i + 3 <= indies.size(); i += 3)
 			{
 				auto index0 = indies[i + 0];
 				auto index1 = indies[i + 1];
 				auto index2 = indies[i + 2];
-				auto point0 = points[i + 0];
-				auto point1 = points[i + 1];
-				auto point2 = points[i + 2];
+				auto point0 = points[index0];
+				auto point1 = points[index1];
+				auto point2 = points[index2];
 				auto& primitive0 = primitives.emplace_back();
 				primitive0 = { point0.X, point0.Y, fillIndex, strokeIndex };
 				auto& primitive1 = primitives.emplace_back();
@@ -158,8 +160,8 @@ void VGPainter::fill(VGElementRaw element)
 
 			auto style = element->getFillStyle();
 			auto& fill = fills.emplace_back();
-			fill.Color = style->Color;
-			if (style->Image.Data.size())
+			if (style) fill.Color = style->Color;
+			if (style && style->Image.Data.size())
 			{
 				auto& image = images.emplace_back();
 				image = style->Image;
@@ -169,7 +171,7 @@ void VGPainter::fill(VGElementRaw element)
 			{
 				fill.Image = -1;
 			}
-			if (VGCast<VGLinearGradient>(style->Gradient))
+			if (style && VGCast<VGLinearGradient>(style->Gradient))
 			{
 				auto gradient = VGCast<VGLinearGradient>(style->Gradient).get();
 				auto& linear = linears.emplace_back();
@@ -195,7 +197,7 @@ void VGPainter::fill(VGElementRaw element)
 					linear.NumStops.X = 0;
 				}
 			}
-			if (VGCast<VGRadialGradient>(style->Gradient))
+			if (style && VGCast<VGRadialGradient>(style->Gradient))
 			{
 				auto gradient = VGCast<VGRadialGradient>(style->Gradient).get();
 				auto& radial = radials.emplace_back();
@@ -223,7 +225,7 @@ void VGPainter::fill(VGElementRaw element)
 		}
 		element->setFillCache(cache);
 	}
-	PRIVATE()->PrimitiveList.insert(PRIVATE()->PrimitiveList.end(), *element->getFillCache());
+	PRIVATE()->PrimitiveList.push_back(*element->getFillCache());
 }
 
 void VGPainter::stroke(VGElementRaw element)
@@ -235,23 +237,23 @@ void VGPainter::stroke(VGElementRaw element)
 		VGVector<VGTessellate::index_t> indies;
 		if (VGTessellate::Stroke(element, points, indies))
 		{
-			auto fillIndex = (uint32_t)-1;
-			auto strokeIndex = (uint32_t)cache->StrokeStyle.size();
-			auto imageIndex = (uint32_t)cache->ImageList.size();
+			auto fillIndex = (int32_t)-1;
+			auto strokeIndex = (int32_t)cache->StrokeStyle.size();
+			auto imageIndex = (int32_t)cache->ImageList.size();
 			auto& primitives = cache->Primitive;
 			auto& fills = cache->FillStyle;
 			auto& strokes = cache->StrokeStyle;
 			auto& images = cache->ImageList;
 			auto& linears = cache->LinearGradient;
 			auto& radials = cache->RadialGradient;
-			for (size_t i = 0; i + 3 < indies.size(); i += 3)
+			for (size_t i = 0; i + 3 <= indies.size(); i += 3)
 			{
 				auto index0 = indies[i + 0];
 				auto index1 = indies[i + 1];
 				auto index2 = indies[i + 2];
-				auto point0 = points[i + 0];
-				auto point1 = points[i + 1];
-				auto point2 = points[i + 2];
+				auto point0 = points[index0];
+				auto point1 = points[index1];
+				auto point2 = points[index2];
 				auto& primitive0 = primitives.emplace_back();
 				primitive0 = { point0.X, point0.Y, fillIndex, strokeIndex };
 				auto& primitive1 = primitives.emplace_back();
@@ -262,8 +264,8 @@ void VGPainter::stroke(VGElementRaw element)
 
 			auto style = element->getStrokeStyle();
 			auto& stroke = strokes.emplace_back();
-			stroke.Color = style->Color;
-			if (style->Image.Data.size())
+			if (style) stroke.Color = style->Color;
+			if (style && style->Image.Data.size())
 			{
 				auto& image = images.emplace_back();
 				image = style->Image;
@@ -273,7 +275,7 @@ void VGPainter::stroke(VGElementRaw element)
 			{
 				stroke.Image = -1;
 			}
-			if (VGCast<VGLinearGradient>(style->Gradient))
+			if (style && VGCast<VGLinearGradient>(style->Gradient))
 			{
 				auto gradient = VGCast<VGLinearGradient>(style->Gradient).get();
 				auto& linear = linears.emplace_back();
@@ -299,7 +301,7 @@ void VGPainter::stroke(VGElementRaw element)
 					linear.NumStops.X = 0;
 				}
 			}
-			if (VGCast<VGRadialGradient>(style->Gradient))
+			if (style && VGCast<VGRadialGradient>(style->Gradient))
 			{
 				auto gradient = VGCast<VGRadialGradient>(style->Gradient).get();
 				auto& radial = radials.emplace_back();
@@ -330,7 +332,12 @@ void VGPainter::stroke(VGElementRaw element)
 	PRIVATE()->PrimitiveList.insert(PRIVATE()->PrimitiveList.end(), *element->getStrokeCache());
 }
 
-VGArrayView<const VGPrimitive> VGPainter::getPrimitiveList() const
+VGVector<VGPrimitive>& VGPainter::getPrimitiveList()
+{
+	return PRIVATE()->PrimitiveList;
+}
+
+VGVector<VGPrimitive> const& VGPainter::getPrimitiveList() const
 {
 	return PRIVATE()->PrimitiveList;
 }

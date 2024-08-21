@@ -119,10 +119,14 @@ void OpenUIPainter::drawRect(float x, float y, float width, float height)
 	shape->close();
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
+		auto color = getBrush().Color;
+		shape->setFillColor({ color.R, color.G, color.B, color.A });
 		CONTEXT()->fillElement(shape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
+		auto color = getPen().Color;
+		shape->setStrokeColor({ color.R, color.G, color.B, color.A });
 		CONTEXT()->strokeElement(shape);
 	}
 }
@@ -141,29 +145,32 @@ void OpenUIPainter::drawText(float x, float y, float width, float height, const 
 
 UIPen const& OpenUIPainter::getPen() const
 {
-	return UIPen();
+	return PRIVATE()->Pen;
 }
 
 void OpenUIPainter::setPen(const UIPen& pen)
 {
+	PRIVATE()->Pen = pen;
 }
 
 UIBrush const& OpenUIPainter::getBrush() const
 {
-	return UIBrush();
+	return PRIVATE()->Brush;
 }
 
 void OpenUIPainter::setBrush(const UIBrush& brush)
 {
+	PRIVATE()->Brush = brush;
 }
 
 UIFont const& OpenUIPainter::getFont() const
 {
-	return UIFont();
+	return PRIVATE()->Font;
 }
 
 void OpenUIPainter::setFont(const UIFont& font)
 {
+	PRIVATE()->Font = font;
 }
 
 void OpenUIPainter::setClipping(bool enable)
@@ -230,8 +237,8 @@ uint32_t OpenUIPainter::getTexture() const
 {
 	auto client = PRIVATE()->Client;
 	glBindFramebuffer(GL_FRAMEBUFFER, PRIVATE()->NativeFrame);
-	glClearColor(1, 1, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClearColor(1, 1, 1, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glViewport((int32_t)client.X, (int32_t)client.Y, (int32_t)client.W, (int32_t)client.H);
 	PRIVATE()->Context->renderElement(PRIVATE()->Client);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
