@@ -8,6 +8,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR})
 set(OPENVG_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "OpenVG Source Path")
 
-add_subdirectory (${OPENUI_SOURCE_DIR})
+add_subdirectory (${OPENVG_SOURCE_DIR}/External/OpenUI)
 add_subdirectory ("OpenVG")
 add_subdirectory ("Sample")

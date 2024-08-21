@@ -5,11 +5,6 @@ OpenVGRender::OpenVGRender()
 {
 	auto common = R"(
 		#define MAX_STOP_COUNT 16
-		struct primitive_t
-		{
-			float X = 0, Y = 0;
-			uint Fill = -1, Stroke = -1;
-		};
 		struct fill_t
 		{
 			float Color[4];
@@ -42,6 +37,11 @@ OpenVGRender::OpenVGRender()
 			VGFloat4  StopPoints[MAX_STOP_COUNT / 4];
 			VGFloat4  StopColors[MAX_STOP_COUNT];
 		};
+		struct primitive_t
+		{
+			float X = 0, Y = 0;
+			uint Fill = -1, Stroke = -1;
+		};
 
 		layout(binding=0) buffer FILL_STYLE_BLOCK
 		{
@@ -58,13 +58,15 @@ OpenVGRender::OpenVGRender()
 	auto vsource = R"(
 		#version 450 core
 		layout (location = 0) in vec2 _point;
-		layout (location = 1) in uint2 _style;
+		layout (location = 1) in uvec2 _style;
 		out vec2 uv;
-		flat out uint index;
+		flat out uint fillStyle;
+		flat out uint strokeStyle;
 
 		void main()
 		{
-			index = _index;
+			fillStyle = _style.x;
+			strokeStyle = _style.y;
 			uv = vec2(_point.x, 1.0-_point.y);
 			gl_Position = vec4(2*_point-1, 0.0, 1.0);
 		}
@@ -73,13 +75,14 @@ OpenVGRender::OpenVGRender()
 	auto fsource = R"(
 		#version 450 core
 		in vec2 uv;
-		flat in uint index;
+		flat in uint fillStyle;
+		flat in uint strokeStyle;
 		layout (location = 0) out vec4 color;
-		layout (binding = 0) uniform sampler2D textureList[32];
+		layout (binding = 0) uniform sampler2D textureList[16];
 
 		void main()
 		{
-			color = texture(textureList[index], uv);
+			color = vec4(1,1,0,1);
 		}
 	)";
 
@@ -145,7 +148,7 @@ OpenVGRender::OpenVGRender()
 	// 4. 设置顶点属性指针 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, X));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, Index));
+	glVertexAttribPointer(1, 2, GL_UNSIGNED_INT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, Fill));
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
 
@@ -159,42 +162,24 @@ OpenVGRender::~OpenVGRender()
 	glDeleteProgram(m_NativeProgram); m_NativeProgram = 0;
 }
 
-void OpenVGRender::render(VGRect client, VGArrayView<VGPrimitive> data)
+void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 {
 	glUseProgram(m_NativeProgram);
 	glBindVertexArray(m_NativePrimitive);
+
 	m_PrimitiveList.clear();
-	int32_t maxTextureUnits = 16;
-	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
-	for (size_t i = 0; i < data.size(); i += maxTextureUnits)
+	for (size_t i = 0; i < data.size(); ++i)
 	{
-		for (size_t k = 0; k < maxTextureUnits && i + k < data.size(); ++k)
-		{
-			auto primitive = data[i].Primitive;
-			auto painter = UICast<OpenGLPainter>(data[i + k].Painter);
-			if (primitive.empty() || painter == nullptr) continue;
-
-			// 绑定到纹理数组
-			auto texture = painter->getTexture();
-			glActiveTexture(GL_TEXTURE0 + k);
-			glBindTexture(GL_TEXTURE_2D, texture);
-
-			for (size_t n = 0; n < primitive.size(); ++n)
-			{
-				m_PrimitiveList.emplace_back(primitive[n].P0.X, primitive[n].P0.Y, (uint32_t)k);
-				m_PrimitiveList.emplace_back(primitive[n].P1.X, primitive[n].P1.Y, (uint32_t)k);
-				m_PrimitiveList.emplace_back(primitive[n].P2.X, primitive[n].P2.Y, (uint32_t)k);
-			}
-		}
-
-		// 更新顶点缓冲区
-		glBindBuffer(GL_ARRAY_BUFFER, m_NativeBuffer);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(primitive_t) * m_PrimitiveList.size(), m_PrimitiveList.data());
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		// 渲染控件视图
-		glDrawArrays(GL_TRIANGLES, 0, m_PrimitiveList.size());
+		m_PrimitiveList.insert(m_PrimitiveList.end(), data[i].Primitive.begin(), data[i].Primitive.end());
 	}
+
+	// 更新顶点缓冲区
+	glBindBuffer(GL_ARRAY_BUFFER, m_NativeBuffer);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(primitive_t) * m_PrimitiveList.size(), m_PrimitiveList.data());
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	// 渲染控件视图
+	glDrawArrays(GL_TRIANGLES, 0, m_PrimitiveList.size());
 
 	glBindVertexArray(0);
 	glUseProgram(0);

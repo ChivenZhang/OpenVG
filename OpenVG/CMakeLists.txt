@@ -11,7 +11,6 @@ add_library (OpenVG SHARED
 	VGShape.h
 	VGPicture.h
 	VGText.h 
-	VGScene.h
 	VGRender.h 
 	VGBuilder.h 
 	VGFactory.h

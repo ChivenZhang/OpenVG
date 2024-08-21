@@ -1,13 +1,16 @@
 #include "OpenUIPainter.h"
 #include "OpenVGRender.h"
+#include <GL/glew.h>
 #include <OpenVG/VGContext.h>
 #include <OpenVG/VGShape.h>
 
 class OpenUIPainterPrivate : public UIPainterPrivate
 {
 public:
+	VGRect Client;
 	VGContextRef Context;
-	uint32_t Texture = 0;
+	uint32_t NativeFrame;
+	uint32_t NativeTexture;
 };
 #define PRIVATE() ((OpenUIPainterPrivate*) m_Private)
 
@@ -15,11 +18,34 @@ OpenUIPainter::OpenUIPainter(uint32_t width, uint32_t height)
 {
 	m_Private = new OpenUIPainterPrivate;
 	PRIVATE()->Context = VGNew<VGContext>();
+	PRIVATE()->Context->setPainter(VGNew<VGPainter>());
 	PRIVATE()->Context->setRender(VGNew<OpenVGRender>());
+
+	PRIVATE()->NativeTexture = 0;
+	glGenTextures(1, &PRIVATE()->NativeTexture);
+	glBindTexture(GL_TEXTURE_2D, PRIVATE()->NativeTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	PRIVATE()->NativeFrame = 0;
+	glGenFramebuffers(1, &PRIVATE()->NativeFrame);
+	glBindFramebuffer(GL_FRAMEBUFFER, PRIVATE()->NativeFrame);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PRIVATE()->NativeTexture, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cerr << "FBO is not complete!" << std::endl;
+		::exit(-1);
+	}
 }
 
 OpenUIPainter::~OpenUIPainter()
 {
+	glDeleteTextures(1, &PRIVATE()->NativeTexture);
+	glDeleteFramebuffers(1, &PRIVATE()->NativeFrame);
 	delete m_Private; m_Private = nullptr;
 }
 
@@ -84,9 +110,6 @@ void OpenUIPainter::drawPolyline(UIArrayView<UIPoint> points)
 
 void OpenUIPainter::drawRect(float x, float y, float width, float height)
 {
-	auto shape = VGNew<VGShape>();
-	// TODO
-	PRIVATE()->Context->addElement(shape);
 }
 
 void OpenUIPainter::drawRects(UIArrayView<UIRect> rects)
@@ -178,14 +201,24 @@ UIArrayView<const uint8_t> OpenUIPainter::getPixelData() const
 
 void OpenUIPainter::resize(uint32_t width, uint32_t height)
 {
+	glBindTexture(GL_TEXTURE_2D, PRIVATE()->NativeTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void OpenUIPainter::setTexture(uint32_t value)
 {
-	PRIVATE()->Texture = value;
+	PRIVATE()->NativeTexture = value;
 }
 
 uint32_t OpenUIPainter::getTexture() const
 {
-	return PRIVATE()->Texture;
+	auto client = PRIVATE()->Client;
+	glBindFramebuffer(GL_FRAMEBUFFER, PRIVATE()->NativeFrame);
+	glClearColor(1, 1, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glViewport((int32_t)client.X, (int32_t)client.Y, (int32_t)client.W, (int32_t)client.H);
+	PRIVATE()->Context->renderElement(PRIVATE()->Client);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return PRIVATE()->NativeTexture;
 }

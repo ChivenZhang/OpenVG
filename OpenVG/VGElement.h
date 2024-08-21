@@ -1,5 +1,4 @@
 #pragma once
-#include "VGPainter.h"
 #include "VGGradient.h"
 class VGContext;
 
@@ -76,13 +75,17 @@ private:
 	VGArrayView<VGPointType> getPointTypeList() const;
 
 	VGPrimitiveRaw getClipCache() const;
+	void setClipCache(VGPrimitiveRef value);
 	VGPrimitiveRaw getFillCache() const;
+	void setFillCache(VGPrimitiveRef value);
 	VGPrimitiveRaw getStrokeCache() const;
+	void setStrokeCache(VGPrimitiveRef value);
 
 protected:
 	VGElementPrivateRaw m_Private;
 
 	friend class VGContext;
+	friend class VGPainter;
 };
 using VGElementRef = VGRef<VGElement>;
 using VGElementRaw = VGRaw<VGElement>;

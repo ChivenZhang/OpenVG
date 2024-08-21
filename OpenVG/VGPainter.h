@@ -1,14 +1,29 @@
 #pragma once
-#include "VG.h"
+#include "VGElement.h"
+
+/// @brief 
+class VGPainterPrivate
+{
+public:
+	virtual ~VGPainterPrivate() = default;
+};
+using VGPainterPrivateRaw = VGRaw<VGPainterPrivate>;
 
 /// @brief 
 class OPENVG_API VGPainter
 {
 public:
-	virtual ~VGPainter() = default;
+	VGPainter();
+	virtual ~VGPainter();
 
-	virtual void paint(VGArrayView<VGPrimitive> primitive);
+	virtual void clip(VGElementRaw element);
+	virtual void fill(VGElementRaw element);
+	virtual void stroke(VGElementRaw element);
 
+	virtual VGArrayView<const VGPrimitive> getPrimitiveList() const;
+
+private:
+	VGPainterPrivateRaw m_Private;
 };
 using VGPainterRef = VGRef<VGPainter>;
 using VGPainterRaw = VGRaw<VGPainter>;

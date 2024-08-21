@@ -351,9 +351,18 @@ struct VGPrimitive
 		VGFloat4  StopPoints[MAX_STOP_COUNT / 4];
 		VGFloat4  StopColors[MAX_STOP_COUNT];
 	};
+	struct primitive_t
+	{
+		float X = 0, Y = 0;
+		uint32_t Fill = -1, Stroke = -1;
+	};
 
-	float X = 0, Y = 0;
-	uint32_t Fill = -1, Stroke = -1;
+	VGVector<fill_t> FillStyle;
+	VGVector<stroke_t> StrokeStyle;
+	VGVector<primitive_t> Primitive;
+	VGVector<linear_t> LinearGradient;
+	VGVector<radial_t> RadialGradient;
+	VGVector<void*> TextureList;
 };
 using VGPrimitiveRef = VGRef<VGPrimitive>;
 using VGPrimitiveRaw = VGRaw<VGPrimitive>;

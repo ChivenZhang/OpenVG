@@ -5,30 +5,30 @@
 OpenUIRender::OpenUIRender()
 {
 	auto vsource = R"(
-		#version 450 core
+		#version 450
 		layout (location = 0) in vec2 _point;
-		layout (location = 1) in uint _index;
+		layout (location = 1) in uint _image;
 		out vec2 uv;
-		flat out uint index;
+		flat out uint image;
 
 		void main()
 		{
-			index = _index;
+			image = _image;
 			uv = vec2(_point.x, 1.0-_point.y);
 			gl_Position = vec4(2*_point-1, 0.0, 1.0);
 		}
 	)";
 
 	auto fsource = R"(
-		#version 450 core
+		#version 450
 		in vec2 uv;
-		flat in uint index;
+		flat in uint image;
 		layout (location = 0) out vec4 color;
-		layout (binding = 0) uniform sampler2D textureList[32];
+		layout (binding = 0) uniform sampler2D textureList[16];
 
 		void main()
 		{
-			color = texture(textureList[index], uv);
+			color = vec4(1,0,0,1);// texture(textureList[image], uv);
 		}
 	)";
 
@@ -94,7 +94,7 @@ OpenUIRender::OpenUIRender()
 	// 4. 设置顶点属性指针 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, X));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, Index));
+	glVertexAttribPointer(1, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, Image));
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
 
@@ -112,19 +112,21 @@ void OpenUIRender::render(UIRect client, UIArrayView<UIPrimitive> data)
 {
 	glUseProgram(m_NativeProgram);
 	glBindVertexArray(m_NativePrimitive);
-	m_PrimitiveList.clear();
 	int32_t maxTextureUnits = 16;
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
 	for (size_t i = 0; i < data.size(); i += maxTextureUnits)
 	{
+		m_PrimitiveList.clear();
 		for (size_t k = 0; k < maxTextureUnits && i + k < data.size(); ++k)
 		{
-			auto primitive = data[i].Primitive;
+			auto primitive = data[i + k].Primitive;
 			auto painter = UICast<OpenUIPainter>(data[i + k].Painter);
 			if (primitive.empty() || painter == nullptr) continue;
 
 			// 绑定到纹理数组
 			auto texture = painter->getTexture();
+			glUseProgram(m_NativeProgram);
+			glBindVertexArray(m_NativePrimitive);
 			glActiveTexture(GL_TEXTURE0 + k);
 			glBindTexture(GL_TEXTURE_2D, texture);
 
