@@ -11,5 +11,5 @@ public:
 public:
 	static bool Fill(VGElementRaw element, VGVector<point_t>& inPoints, VGVector<index_t>& inIndecies);
 
-	static bool Stroke(VGElementRaw element, VGVector<point_t>& inPoints, VGVector<index_t>& inIndecies);)
+	static bool Stroke(VGElementRaw element, VGVector<point_t>& inPoints, VGVector<index_t>& inIndecies);
 };

@@ -14,6 +14,7 @@ public:
 using VGGradientRaw = VGRaw<VGGradient>;
 using VGGradientRef = VGRef<VGGradient>;
 
+/// @brief 
 class OPENVG_API VGLinearGradient : public VGGradient
 {
 public:
@@ -24,6 +25,7 @@ public:
 	VGPoint getEndPos() const;
 };
 
+/// @brief 
 class OPENVG_API VGRadialGradient : public VGGradient
 {
 public:
