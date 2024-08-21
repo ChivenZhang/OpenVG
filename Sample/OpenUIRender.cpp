@@ -28,7 +28,7 @@ OpenUIRender::OpenUIRender()
 
 		void main()
 		{
-			color = vec4(1,0,0,1);// texture(textureList[image], uv);
+			color = texture(textureList[image], uv);
 		}
 	)";
 
@@ -110,8 +110,6 @@ OpenUIRender::~OpenUIRender()
 
 void OpenUIRender::render(UIRect client, UIArrayView<UIPrimitive> data)
 {
-	glUseProgram(m_NativeProgram);
-	glBindVertexArray(m_NativePrimitive);
 	int32_t maxTextureUnits = 16;
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
 	for (size_t i = 0; i < data.size(); i += maxTextureUnits)
@@ -126,7 +124,6 @@ void OpenUIRender::render(UIRect client, UIArrayView<UIPrimitive> data)
 			// 绑定到纹理数组
 			auto texture = painter->getTexture();
 			glUseProgram(m_NativeProgram);
-			glBindVertexArray(m_NativePrimitive);
 			glActiveTexture(GL_TEXTURE0 + k);
 			glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -144,6 +141,8 @@ void OpenUIRender::render(UIRect client, UIArrayView<UIPrimitive> data)
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		// 渲染控件视图
+		glUseProgram(m_NativeProgram);
+		glBindVertexArray(m_NativePrimitive);
 		glDrawArrays(GL_TRIANGLES, 0, m_PrimitiveList.size());
 	}
 

@@ -19,17 +19,12 @@ OpenUIPainter::OpenUIPainter(uint32_t width, uint32_t height)
 	m_Private = new OpenUIPainterPrivate;
 	PRIVATE()->Context = VGNew<VGContext>();
 	PRIVATE()->Context->setPainter(VGNew<VGPainter>());
-	PRIVATE()->Context->setRender(VGNew<OpenVGRender>());
+	auto render = VGNew<OpenVGRender>();
+	PRIVATE()->Context->setRender(render);
 
 	PRIVATE()->NativeTexture = 0;
 	glGenTextures(1, &PRIVATE()->NativeTexture);
-	glBindTexture(GL_TEXTURE_2D, PRIVATE()->NativeTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	resize(width, height);
 
 	PRIVATE()->NativeFrame = 0;
 	glGenFramebuffers(1, &PRIVATE()->NativeFrame);
@@ -44,8 +39,8 @@ OpenUIPainter::OpenUIPainter(uint32_t width, uint32_t height)
 
 OpenUIPainter::~OpenUIPainter()
 {
-	glDeleteTextures(1, &PRIVATE()->NativeTexture);
-	glDeleteFramebuffers(1, &PRIVATE()->NativeFrame);
+	glDeleteFramebuffers(1, &PRIVATE()->NativeFrame); PRIVATE()->NativeFrame = 0;
+	glDeleteTextures(1, &PRIVATE()->NativeTexture); PRIVATE()->NativeTexture = 0;
 	delete m_Private; m_Private = nullptr;
 }
 
@@ -201,7 +196,12 @@ UIArrayView<const uint8_t> OpenUIPainter::getPixelData() const
 
 void OpenUIPainter::resize(uint32_t width, uint32_t height)
 {
+	PRIVATE()->Client = VGRect{ 0,0,(float)width,(float)height };
 	glBindTexture(GL_TEXTURE_2D, PRIVATE()->NativeTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -216,7 +216,7 @@ uint32_t OpenUIPainter::getTexture() const
 	auto client = PRIVATE()->Client;
 	glBindFramebuffer(GL_FRAMEBUFFER, PRIVATE()->NativeFrame);
 	glClearColor(1, 1, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glViewport((int32_t)client.X, (int32_t)client.Y, (int32_t)client.W, (int32_t)client.H);
 	PRIVATE()->Context->renderElement(PRIVATE()->Client);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
