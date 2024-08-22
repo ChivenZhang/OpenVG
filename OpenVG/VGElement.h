@@ -50,6 +50,15 @@ public:
 	void close();
 	void reset();
 
+	VGFloat2 getScaling() const;
+	void setScaling(VGFloat2 value);
+
+	float getRotate() const;
+	void setRotate(float value);
+
+	VGFloat2 getTranslate() const;
+	void setTranslate(VGFloat2 value);
+
 	VGColor getFillColor() const;
 	void setFillColor(VGColor value);
 

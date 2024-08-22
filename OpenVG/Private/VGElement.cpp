@@ -1,10 +1,3 @@
-#include "VGElement.h"
-#include "VGElement.h"
-#include "VGElement.h"
-#include "VGElement.h"
-#include "VGElement.h"
-#include "VGElement.h"
-#include "VGElement.h"
 #include "../VGElement.h"
 
 class VGElementPrivateData : public VGElementPrivate
@@ -15,6 +8,8 @@ public:
 	VGVector<VGPoint> PointList;
 	VGVector<VGPointType> PointTypeList;
 	VGPrimitiveRef ClipCache, FillCache, StrokeCache;
+	float Rotation = 0;
+	VGFloat2 Translate, Scaling;
 };
 #define PRIVATE() ((VGElementPrivateData*) m_Private)
 
@@ -76,6 +71,36 @@ void VGElement::reset()
 	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointList.clear();
 	PRIVATE()->PointTypeList.clear();
+}
+
+VGFloat2 VGElement::getScaling() const
+{
+	return PRIVATE()->Scaling;
+}
+
+void VGElement::setScaling(VGFloat2 value)
+{
+	PRIVATE()->Scaling = value;
+}
+
+float VGElement::getRotate() const
+{
+	return PRIVATE()->Rotation;
+}
+
+void VGElement::setRotate(float value)
+{
+	PRIVATE()->Rotation = value;
+}
+
+VGFloat2 VGElement::getTranslate() const
+{
+	return PRIVATE()->Translate;
+}
+
+void VGElement::setTranslate(VGFloat2 value)
+{
+	PRIVATE()->Translate = value;
 }
 
 VGColor VGElement::getFillColor() const

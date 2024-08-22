@@ -116,16 +116,15 @@ void OpenUIPainter::drawRect(float x, float y, float width, float height)
 	if (PRIVATE()->RectShape == nullptr)
 	{
 		PRIVATE()->RectShape = VGNew<VGElement>();
-		PRIVATE()->RectShape->moveTo(x, y);
-		PRIVATE()->RectShape->cubicTo(x + width, y, x + width, y + height, x, y + height);
+		PRIVATE()->RectShape->moveTo(0, 0);
+		PRIVATE()->RectShape->lineTo(0, 1);
+		PRIVATE()->RectShape->lineTo(1, 1);
+		PRIVATE()->RectShape->lineTo(1, 0);
 		PRIVATE()->RectShape->close();
 	}
-
-	/*shape->moveTo(x, y);
-	shape->lineTo(x + width, y);
-	shape->lineTo(x + width, y + height);
-	shape->lineTo(x, y + height);
-	shape->close();*/
+	PRIVATE()->RectShape->setRotate(0);
+	PRIVATE()->RectShape->setTranslate({ x, y });
+	PRIVATE()->RectShape->setScaling({ width, height });
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
 		auto color = getBrush().Color;

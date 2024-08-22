@@ -333,44 +333,63 @@ struct VGFloat3x3
 		return Value[index];
 	}
 
-	void translate(float tx, float ty)
+	// 创建单位矩阵
+	static VGFloat3x3 Identity()
 	{
-		X[2] += tx;
-		Value[1][2] += ty;
+		return VGFloat3x3();
 	}
 
-	void scale(float sx, float sy)
+	// 平移变换矩阵
+	static VGFloat3x3 Translate(float tx, float ty)
 	{
-		Value[0][0] *= sx;
-		Value[1][1] *= sy;
+		VGFloat3x3 matrix = Identity();
+		matrix.Value[2][0] = tx;
+		matrix.Value[2][1] = ty;
+		return matrix;
 	}
 
-	void rotate(float angle)
+	// 缩放变换矩阵
+	static VGFloat3x3 Scaling(float sx, float sy)
 	{
-		float c = ::cos(angle);
-		float s = ::sin(angle);
-
-		float temp = Value[0][0];
-		Value[0][0] = c * temp - s * Value[1][0];
-		Value[0][1] = c * Value[0][1] - s * Value[1][1];
-
-		temp = Value[1][0];
-		Value[1][0] = s * temp + c * Value[0][0];
-		Value[1][1] = s * Value[0][1] + c * Value[1][1];
+		VGFloat3x3 matrix = Identity();
+		matrix.Value[0][0] = sx;
+		matrix.Value[1][1] = sy;
+		return matrix;
 	}
 
-	void print() const
+	// 旋转变换矩阵
+	static VGFloat3x3 Rotation(float angleInDegrees)
 	{
-		for (int i = 0; i < 3; ++i)
-		{
-			for (int j = 0; j < 3; ++j)
-			{
-				std::cout << Value[i][j] << " ";
+		VGFloat3x3 matrix = Identity();
+		float angleInRadians = angleInDegrees * VG_MATH_PI / 180.0f;
+		matrix.Value[0][0] = cos(angleInRadians);
+		matrix.Value[0][1] = -sin(angleInRadians);
+		matrix.Value[1][0] = sin(angleInRadians);
+		matrix.Value[1][1] = cos(angleInRadians);
+		return matrix;
+	}
+
+	static VGFloat3x3 Transform(float tx, float ty, float rz, float sx = 1, float sy = 1)
+	{
+		VGFloat3x3 matrix = VGFloat3x3::Scaling(sx, sy) * VGFloat3x3::Rotation(rz) * VGFloat3x3::Translate(tx, ty);
+		return matrix;
+	}
+
+	friend VGFloat3x3 operator *(const VGFloat3x3& a, const VGFloat3x3& b);
+};
+
+inline VGFloat3x3 operator *(const VGFloat3x3& a, const VGFloat3x3& b)
+{
+	VGFloat3x3 result = { {{0}} };
+	for (int i = 0; i < 3; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			for (int k = 0; k < 3; ++k) {
+				result.Value[i][j] += a.Value[i][k] * b.Value[k][j];
 			}
-			std::cout << std::endl;
 		}
 	}
-};
+	return result;
+}
 
 inline bool operator ==(VGFloat3x3 const& a, VGFloat3x3 const& b)
 {
@@ -490,7 +509,7 @@ struct VGPrimitive
 	{
 		float X = 0, Y = 0;
 		int32_t Fill = -1, Stroke = -1;
-		int32_t Matrix = -1, _Unused;
+		int32_t Matrix = -1, _Unused = -1;
 	};
 	using image_t = VGImage;
 	using matrix_t = VGFloat3x3;

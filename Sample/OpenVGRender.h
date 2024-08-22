@@ -12,7 +12,7 @@ public:
 
 protected:
 	uint32_t m_NativeProgram;
-	uint32_t m_NativeBuffer;
+	uint32_t m_NativeVertexBuffer;
 	uint32_t m_NativeFillBuffer;
 	uint32_t m_NativeStrokeBuffer;
 	uint32_t m_NativeLinearBuffer;
