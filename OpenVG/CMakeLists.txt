@@ -30,4 +30,4 @@ add_library (OpenVG SHARED
 )
 
 target_include_directories(OpenVG PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(OpenVG libtess2)
+target_link_libraries(OpenVG libtess2 micro-tess)

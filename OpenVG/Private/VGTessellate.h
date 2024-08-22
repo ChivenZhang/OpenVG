@@ -9,8 +9,6 @@ public:
 	using index_t = uint32_t;
 
 public:
-	static bool Path(VGElementRaw element, VGVector<VGPoint>& outPoints);
-
 	static bool Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndecies);
 
 	static bool Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndecies);

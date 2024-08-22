@@ -21,7 +21,7 @@ struct VGStrokeStyle
 	VGGradientRef Gradient;
 	VGStrokeCap LineCap;
 	VGStrokeJoin LineJoin;
-	float LineWidth = 0;
+	float LineWidth = 1;
 	float MiterLimit = 4;
 	float DashOffset = 0;
 	VGVector<float> DashControl;

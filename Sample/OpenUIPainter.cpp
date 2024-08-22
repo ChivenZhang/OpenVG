@@ -116,23 +116,34 @@ void OpenUIPainter::drawRect(float x, float y, float width, float height)
 	if (PRIVATE()->RectShape == nullptr)
 	{
 		PRIVATE()->RectShape = VGNew<VGElement>();
-		PRIVATE()->RectShape->moveTo(0, 0);
-		PRIVATE()->RectShape->lineTo(0, 1);
-		PRIVATE()->RectShape->lineTo(1, 1);
-		PRIVATE()->RectShape->lineTo(1, 0);
-		PRIVATE()->RectShape->close();
 	}
-	PRIVATE()->RectShape->setRotate((::clock() % 1000) * 0.001 * 360);
-	PRIVATE()->RectShape->setTranslate({ x, y });
-	PRIVATE()->RectShape->setScaling({ width, height });
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
+		PRIVATE()->RectShape->reset();
+		PRIVATE()->RectShape->moveTo(x, y);
+		PRIVATE()->RectShape->lineTo(x, y + height);
+		PRIVATE()->RectShape->lineTo(x + width, y + height);
+		PRIVATE()->RectShape->lineTo(x + width, y);
+		PRIVATE()->RectShape->close();
+
+		PRIVATE()->RectShape->setRotate(0);
+		PRIVATE()->RectShape->setScaling({ 1,1 });
+		PRIVATE()->RectShape->setTranslate({ 0,0 });
 		auto color = getBrush().Color;
 		PRIVATE()->RectShape->setFillColor({ color.R, color.G, color.B, color.A });
 		CONTEXT()->fillElement(PRIVATE()->RectShape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
+		PRIVATE()->RectShape->reset();
+		PRIVATE()->RectShape->moveTo(x, y);
+		PRIVATE()->RectShape->lineTo(x, y + height);
+		PRIVATE()->RectShape->lineTo(x + width, y + height);
+		PRIVATE()->RectShape->lineTo(x + width, y);
+		PRIVATE()->RectShape->close();
+		PRIVATE()->RectShape->setRotate(0);
+		PRIVATE()->RectShape->setScaling({ 1,1 });
+		PRIVATE()->RectShape->setTranslate({ 0,0 });
 		auto color = getPen().Color;
 		PRIVATE()->RectShape->setStrokeColor({ color.R, color.G, color.B, color.A });
 		CONTEXT()->strokeElement(PRIVATE()->RectShape);

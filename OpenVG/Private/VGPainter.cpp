@@ -1,5 +1,3 @@
-#include "VGPainter.h"
-#include "VGPainter.h"
 #include "../VGPainter.h"
 #include "VGTessellate.h"
 
@@ -67,7 +65,7 @@ void VGPainter::fill(VGElementRaw element)
 {
 	if (element->getFillStyle() == nullptr) return;
 
-	if (element->getFillCache() == nullptr)
+	// if (element->getFillCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
 		VGVector<VGTessellate::point_t> points;
@@ -171,7 +169,7 @@ void VGPainter::stroke(VGElementRaw element)
 {
 	if (element->getStrokeStyle() == nullptr) return;
 
-	if (element->getStrokeCache() == nullptr)
+	// if (element->getStrokeCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
 		VGVector<VGTessellate::point_t> points;
