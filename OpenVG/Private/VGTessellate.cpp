@@ -368,6 +368,142 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 {
 	auto points = element->getPointList();
 	auto types = element->getPointTypeList();
+	auto result = false;
+	auto width = element->getLineWidth();
+	auto miter = element->getMiterLimit();
+	auto cap = element->getLineCap();
+	auto join = element->getLineJoin();
+	auto offset = element->getDashOffset();
+	auto control = element->getDashControl();
+	auto oldPoints = VGArrayView<VGPoint>();
+	auto oldTypes = VGArrayView<VGPointType>();
+	auto newPoints = VGArrayView<VGPoint>();
+	auto newTypes = VGArrayView<VGPointType>();
+	oldPoints = newPoints = points;
+	oldTypes = newTypes = types;
 
-	return false;
+	struct State
+	{
+		VGPoint firstPt = {};
+		VGPoint firstPtDir = {};
+		VGPoint prevPt = {};
+		VGPoint prevPtDir = {};
+		bool hasMove = false;
+	} state;
+
+	auto stroke_cap_func = [&]() {
+
+		};
+
+	auto stroke_line_func = [&](VGPoint const& curr) {
+
+		};
+
+	auto stroke_cubic_func = [&](VGPoint const& cnt1, VGPoint const& cnt2, VGPoint const& end) {
+
+		};
+
+	auto stroke_close_func = [&]() {
+
+		};
+
+	auto stroke_join_func = [&](VGPoint const& dir) {
+
+		};
+
+	auto stroke_round_func = [&](VGPoint const& prev, VGPoint const& curr, VGPoint const& center) {
+
+		};
+
+	auto stroke_miter_func = [&](VGPoint const& prev, VGPoint const& curr, VGPoint const& center) {
+
+		};
+
+	auto stroke_bevel_func = [&](VGPoint const& prev, VGPoint const& curr, VGPoint const& center) {
+
+		};
+
+	auto stroke_square_func = [&](VGPoint const& p, VGPoint const& outDir) {
+
+		};
+
+	auto stroke_round2_func = [&](VGPoint const& p, VGPoint const& outDir) {
+
+		};
+
+	auto stroke_func = [&]() {
+
+		for (size_t i = 0, k = 0; i < types.size(); ++i)
+		{
+			switch (types[i])
+			{
+			case VGPointType::MoveTo:
+			{
+				if (state.hasMove)
+				{
+					stroke_cap_func();
+					state.hasMove = false;
+				}
+				state.hasMove = true;
+				state.firstPt = points[k];
+				state.firstPtDir = VGPoint();
+				state.prevPt = points[k];
+				state.prevPtDir = VGPoint{};
+				k += 1;
+			} break;
+			case VGPointType::LineTo:
+			{
+				stroke_line_func(points[k]);
+				k += 1;
+			} break;
+			case VGPointType::CubicTo:
+			{
+				stroke_cubic_func(points[k + 0], points[k + 1], points[k + 2]);
+				k += 3;
+			} break;
+			case VGPointType::Close:
+			{
+				stroke_close_func();
+				state.hasMove = false;
+			} break;
+			}
+		}
+		};
+
+	// ====================================================
+
+	auto dash_stroke_line_func = [&]() {
+
+		};
+
+	auto dash_stroke_cubic_func = [&]() {
+
+		};
+
+	auto dash_stroke_move_func = [&]() {
+
+		};
+
+	auto dash_stroke_line2_func = [&]() {
+
+		};
+
+	auto dash_stroke_cubic2_func = [&]() {
+
+		};
+
+	auto dash_stroke_func = [&]() {
+
+		VGVector<VGPoint> dashPoints;
+		VGVector<VGPointType> dashTypes;
+
+		oldPoints = dashPoints;
+		oldTypes = dashTypes;
+
+		};
+
+	if (control.size()) dash_stroke_func();
+	else stroke_func();
+
+	return result;
 }

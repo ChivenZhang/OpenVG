@@ -122,7 +122,7 @@ void OpenUIPainter::drawRect(float x, float y, float width, float height)
 		PRIVATE()->RectShape->lineTo(1, 0);
 		PRIVATE()->RectShape->close();
 	}
-	PRIVATE()->RectShape->setRotate(0);
+	PRIVATE()->RectShape->setRotate((::clock() % 1000) * 0.001 * 360);
 	PRIVATE()->RectShape->setTranslate({ x, y });
 	PRIVATE()->RectShape->setScaling({ width, height });
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
