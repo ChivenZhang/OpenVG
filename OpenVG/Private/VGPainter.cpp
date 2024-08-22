@@ -133,15 +133,19 @@ void VGPainter::fill(VGElementRaw element)
 		VGVector<VGTessellate::index_t> indies;
 		if (VGTessellate::Fill(element, points, indies))
 		{
-			auto fillIndex = (int32_t)cache->FillStyle.size();
-			auto strokeIndex = (int32_t)-1;
-			auto imageIndex = (int32_t)cache->ImageList.size();
-			auto& primitives = cache->Primitive;
 			auto& fills = cache->FillStyle;
 			auto& strokes = cache->StrokeStyle;
 			auto& images = cache->ImageList;
 			auto& linears = cache->LinearGradient;
 			auto& radials = cache->RadialGradient;
+			auto& primitives = cache->Primitive;
+			auto& matrixs = cache->MatrixList;
+
+			auto fillIndex = (int32_t)fills.size();
+			auto strokeIndex = (int32_t)-1;
+			auto imageIndex = (int32_t)images.size();
+			auto matrixIndex = (int32_t)matrixs.size();
+
 			for (size_t i = 0; i + 3 <= indies.size(); i += 3)
 			{
 				auto index0 = indies[i + 0];
@@ -151,12 +155,16 @@ void VGPainter::fill(VGElementRaw element)
 				auto point1 = points[index1];
 				auto point2 = points[index2];
 				auto& primitive0 = primitives.emplace_back();
-				primitive0 = { point0.X, point0.Y, fillIndex, strokeIndex };
+				primitive0 = { point0.X, point0.Y, fillIndex, strokeIndex, matrixIndex, };
 				auto& primitive1 = primitives.emplace_back();
-				primitive1 = { point1.X, point1.Y, fillIndex, strokeIndex };
+				primitive1 = { point1.X, point1.Y, fillIndex, strokeIndex, matrixIndex, };
 				auto& primitive2 = primitives.emplace_back();
-				primitive2 = { point2.X, point2.Y, fillIndex, strokeIndex };
+				primitive2 = { point2.X, point2.Y, fillIndex, strokeIndex, matrixIndex, };
 			}
+
+			auto& matrix = matrixs.emplace_back();
+			matrix.rotate(VGDeg2Rad(0));
+			matrix.print();
 
 			auto style = element->getFillStyle();
 			auto& fill = fills.emplace_back();

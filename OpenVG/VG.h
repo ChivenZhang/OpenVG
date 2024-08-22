@@ -207,9 +207,35 @@ inline constexpr uint32_t VGHash(VGCString value)
 
 // ============================================
 
+#define VG_MATH_PI  3.14159265358979323846f
+
+static inline float VGDeg2Rad(float degree)
+{
+	return degree * (VG_MATH_PI / 180.0f);
+}
+
+static inline float VGRad2Deg(float radian)
+{
+	return radian * (180.0f / VG_MATH_PI);
+}
+
 struct VGFloat2
 {
-	float X = 0, Y = 0;
+	union
+	{
+		float Value[2]{ };
+		struct { float X, Y; };
+	};
+
+	float& operator [](size_t index)
+	{
+		return Value[index];
+	}
+
+	float const& operator [](size_t index) const
+	{
+		return Value[index];
+	}
 };
 
 inline bool operator ==(VGFloat2 const& a, VGFloat2 const& b)
@@ -219,7 +245,21 @@ inline bool operator ==(VGFloat2 const& a, VGFloat2 const& b)
 
 struct VGFloat3
 {
-	float X = 0, Y = 0, Z = 0;
+	union
+	{
+		float Value[3]{ };
+		struct { float X, Y, Z; };
+	};
+
+	float& operator [](size_t index)
+	{
+		return Value[index];
+	}
+
+	float const& operator [](size_t index) const
+	{
+		return Value[index];
+	}
 };
 
 inline bool operator ==(VGFloat3 const& a, VGFloat3 const& b)
@@ -229,7 +269,21 @@ inline bool operator ==(VGFloat3 const& a, VGFloat3 const& b)
 
 struct VGFloat4
 {
-	float X = 0, Y = 0, Z = 0, W = 0;
+	union
+	{
+		float Value[4]{ };
+		struct { float X, Y, Z, W; };
+	};
+
+	float& operator [](size_t index)
+	{
+		return Value[index];
+	}
+
+	float const& operator [](size_t index) const
+	{
+		return Value[index];
+	}
 };
 
 inline bool operator ==(VGFloat4 const& a, VGFloat4 const& b)
@@ -239,7 +293,21 @@ inline bool operator ==(VGFloat4 const& a, VGFloat4 const& b)
 
 struct VGFloat2x2
 {
-	VGFloat2 X, Y;
+	union
+	{
+		VGFloat2 Value[2]{ {1,0},{0,1} };
+		struct { VGFloat2 X, Y; };
+	};
+
+	VGFloat2& operator [](size_t index)
+	{
+		return Value[index];
+	}
+
+	VGFloat2 const& operator [](size_t index) const
+	{
+		return Value[index];
+	}
 };
 
 inline bool operator ==(VGFloat2x2 const& a, VGFloat2x2 const& b)
@@ -249,7 +317,59 @@ inline bool operator ==(VGFloat2x2 const& a, VGFloat2x2 const& b)
 
 struct VGFloat3x3
 {
-	VGFloat3 X, Y, Z;
+	union
+	{
+		VGFloat4 Value[3]{ {1,0,0,0},{0,1,0,0},{0,0,1,0} };
+		struct { VGFloat4 X, Y, Z; };
+	};
+
+	VGFloat4& operator [](size_t index)
+	{
+		return Value[index];
+	}
+
+	VGFloat4 const& operator [](size_t index) const
+	{
+		return Value[index];
+	}
+
+	void translate(float tx, float ty)
+	{
+		X[2] += tx;
+		Value[1][2] += ty;
+	}
+
+	void scale(float sx, float sy)
+	{
+		Value[0][0] *= sx;
+		Value[1][1] *= sy;
+	}
+
+	void rotate(float angle)
+	{
+		float c = ::cos(angle);
+		float s = ::sin(angle);
+
+		float temp = Value[0][0];
+		Value[0][0] = c * temp - s * Value[1][0];
+		Value[0][1] = c * Value[0][1] - s * Value[1][1];
+
+		temp = Value[1][0];
+		Value[1][0] = s * temp + c * Value[0][0];
+		Value[1][1] = s * Value[0][1] + c * Value[1][1];
+	}
+
+	void print() const
+	{
+		for (int i = 0; i < 3; ++i)
+		{
+			for (int j = 0; j < 3; ++j)
+			{
+				std::cout << Value[i][j] << " ";
+			}
+			std::cout << std::endl;
+		}
+	}
 };
 
 inline bool operator ==(VGFloat3x3 const& a, VGFloat3x3 const& b)
@@ -259,7 +379,21 @@ inline bool operator ==(VGFloat3x3 const& a, VGFloat3x3 const& b)
 
 struct VGFloat4x4
 {
-	VGFloat4 X, Y, Z, W;
+	union
+	{
+		VGFloat4 Value[4]{ {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
+		struct { VGFloat4 X, Y, Z, W; };
+	};
+
+	VGFloat4& operator [](size_t index)
+	{
+		return Value[index];
+	}
+
+	VGFloat4 const& operator [](size_t index) const
+	{
+		return Value[index];
+	}
 };
 
 inline bool operator ==(VGFloat4x4 const& a, VGFloat4x4 const& b)
@@ -356,8 +490,10 @@ struct VGPrimitive
 	{
 		float X = 0, Y = 0;
 		int32_t Fill = -1, Stroke = -1;
+		int32_t Matrix = -1, _Unused;
 	};
 	using image_t = VGImage;
+	using matrix_t = VGFloat3x3;
 
 	VGVector<image_t> ImageList;
 	VGVector<fill_t> FillStyle;
@@ -365,6 +501,7 @@ struct VGPrimitive
 	VGVector<primitive_t> Primitive;
 	VGVector<linear_t> LinearGradient;
 	VGVector<radial_t> RadialGradient;
+	VGVector<matrix_t> MatrixList;
 };
 using VGPrimitiveRef = VGRef<VGPrimitive>;
 using VGPrimitiveRaw = VGRaw<VGPrimitive>;

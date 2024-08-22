@@ -14,8 +14,10 @@ public:
 	UIPen Pen;
 	UIFont Font;
 	UIBrush Brush;
-	UIRect CilpRect;
+	UIRect ClipRect, Viewport;
 	bool EnableCilp = false;
+
+	VGElementRef RectShape;
 };
 #define PRIVATE() ((OpenUIPainterPrivate*) m_Private)
 #define CONTEXT() (PRIVATE()->Context)
@@ -111,28 +113,39 @@ void OpenUIPainter::drawPolyline(UIArrayView<UIPoint> points)
 
 void OpenUIPainter::drawRect(float x, float y, float width, float height)
 {
-	auto shape = VGNew<VGElement>();
-	shape->moveTo(x, y);
+	if (PRIVATE()->RectShape == nullptr)
+	{
+		PRIVATE()->RectShape = VGNew<VGElement>();
+		PRIVATE()->RectShape->moveTo(x, y);
+		PRIVATE()->RectShape->cubicTo(x + width, y, x + width, y + height, x, y + height);
+		PRIVATE()->RectShape->close();
+	}
+
+	/*shape->moveTo(x, y);
 	shape->lineTo(x + width, y);
 	shape->lineTo(x + width, y + height);
 	shape->lineTo(x, y + height);
-	shape->close();
+	shape->close();*/
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
 		auto color = getBrush().Color;
-		shape->setFillColor({ color.R, color.G, color.B, color.A });
-		CONTEXT()->fillElement(shape);
+		PRIVATE()->RectShape->setFillColor({ color.R, color.G, color.B, color.A });
+		CONTEXT()->fillElement(PRIVATE()->RectShape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
 		auto color = getPen().Color;
-		shape->setStrokeColor({ color.R, color.G, color.B, color.A });
-		CONTEXT()->strokeElement(shape);
+		PRIVATE()->RectShape->setStrokeColor({ color.R, color.G, color.B, color.A });
+		CONTEXT()->strokeElement(PRIVATE()->RectShape);
 	}
 }
 
 void OpenUIPainter::drawRects(UIArrayView<UIRect> rects)
 {
+	for (size_t i = 0; i < rects.size(); ++i)
+	{
+		drawRect(rects[i].X, rects[i].Y, rects[i].W, rects[i].H);
+	}
 }
 
 void OpenUIPainter::drawRoundedRect(float x, float y, float width, float height, float xRadius, float yRadius)
@@ -179,10 +192,12 @@ void OpenUIPainter::setClipping(bool enable)
 
 void OpenUIPainter::setClipRect(float x, float y, float width, float height)
 {
+	PRIVATE()->ClipRect = { x, y, width, height };
 }
 
 void OpenUIPainter::setViewport(float x, float y, float width, float height)
 {
+	PRIVATE()->Viewport = { x, y, width, height };
 }
 
 void OpenUIPainter::shear(float sh, float sv)
@@ -203,17 +218,17 @@ void OpenUIPainter::translate(float dx, float dy)
 
 uint32_t OpenUIPainter::getWidth() const
 {
-	return 0;
+	return PRIVATE()->Client.W;
 }
 
 uint32_t OpenUIPainter::getHeight() const
 {
-	return 0;
+	return PRIVATE()->Client.H;
 }
 
 uint32_t OpenUIPainter::getStride() const
 {
-	return 0;
+	return getWidth() * 4;
 }
 
 UIArrayView<const uint8_t> OpenUIPainter::getPixelData() const
@@ -247,4 +262,5 @@ uint32_t OpenUIPainter::getTexture() const
 
 void OpenUIPainter::setTexture(uint32_t value)
 {
+	// Nothing
 }

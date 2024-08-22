@@ -1,6 +1,8 @@
 #include "OpenVGRender.h"
 #include <GL/glew.h>
 
+#define OPENVG_MAX_TRIANGLE 10240
+
 OpenVGRender::OpenVGRender()
 {
 	auto common = R"(
@@ -63,6 +65,11 @@ OpenVGRender::OpenVGRender()
 			radial_t RadialList[];
 		};
 
+		layout(std430, binding=4) buffer TRANFORM_MATRIX_BLOCK
+		{
+			mat3 MatrixList[];
+		};
+
 		layout (binding = 0) uniform sampler2D TextureList[16];
 
 		uniform vec2 Viewport;
@@ -72,6 +79,7 @@ OpenVGRender::OpenVGRender()
 		#version 450
 		layout (location = 0) in vec2 _point;
 		layout (location = 1) in ivec2 _style;
+		layout (location = 2) in ivec2 _matrix;
 		out vec2 uv;
 		flat out int fillStyle;
 		flat out int strokeStyle;
@@ -80,8 +88,10 @@ OpenVGRender::OpenVGRender()
 		{
 			fillStyle = _style.x;
 			strokeStyle = _style.y;
-			uv = vec2(_point.x*Viewport.x, 1.0-_point.y*Viewport.y);
-			gl_Position = vec4(2*_point*Viewport - 1, 0.0, 1.0);
+			mat3 matrix = MatrixList[_matrix.x];
+			vec2 point = vec2(matrix * vec3(_point, 1.0));
+			uv = vec2(point.x * Viewport.x, 1.0-point.y * Viewport.y);
+			gl_Position = vec4(2*point*Viewport - 1, 0.0, 1.0);
 		}
 	)";
 
@@ -157,7 +167,7 @@ OpenVGRender::OpenVGRender()
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(primitive_t) * 1024, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(primitive_t) * 3 * OPENVG_MAX_TRIANGLE, nullptr, GL_DYNAMIC_DRAW);
 
 	m_NativeBuffer = vbo;
 
@@ -174,27 +184,33 @@ OpenVGRender::OpenVGRender()
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::fill_t) * 1024, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::fill_t) * OPENVG_MAX_TRIANGLE, nullptr, GL_DYNAMIC_DRAW);
 
 	m_NativeFillBuffer = vbo;
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::stroke_t) * 1024, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::stroke_t) * OPENVG_MAX_TRIANGLE, nullptr, GL_DYNAMIC_DRAW);
 
 	m_NativeStrokeBuffer = vbo;
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::linear_t) * 1024, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::linear_t) * OPENVG_MAX_TRIANGLE, nullptr, GL_DYNAMIC_DRAW);
 
 	m_NativeLinearBuffer = vbo;
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::radial_t) * 1024, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::radial_t) * OPENVG_MAX_TRIANGLE, nullptr, GL_DYNAMIC_DRAW);
 
 	m_NativeRadialBuffer = vbo;
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(VGPrimitive::matrix_t) * OPENVG_MAX_TRIANGLE, nullptr, GL_DYNAMIC_DRAW);
+
+	m_NativeMatrixBuffer = vbo;
 }
 
 OpenVGRender::~OpenVGRender()
@@ -205,6 +221,7 @@ OpenVGRender::~OpenVGRender()
 	glDeleteBuffers(1, &m_NativeStrokeBuffer); m_NativeStrokeBuffer = 0;
 	glDeleteBuffers(1, &m_NativeLinearBuffer); m_NativeLinearBuffer = 0;
 	glDeleteBuffers(1, &m_NativeRadialBuffer); m_NativeRadialBuffer = 0;
+	glDeleteBuffers(1, &m_NativeMatrixBuffer); m_NativeMatrixBuffer = 0;
 	glDeleteVertexArrays(1, &m_NativePrimitive); m_NativePrimitive = 0;
 }
 
@@ -216,24 +233,37 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 	m_LinearList.clear();
 	m_RadialList.clear();
 	m_PrimitiveList.clear();
-	for (size_t i = 0; i < data.size(); ++i)
+	m_MatrixList.clear();
+
+	for (size_t i = 0, k = 0; i < data.size(); ++i)
+	{
+		k += data[i].Primitive.size();
+		if (i + 1 == data.size()) m_PrimitiveList.resize(k);
+	}
+
+	for (size_t i = 0, p = 0; i < data.size(); ++i)
 	{
 		auto fillIndex = m_FillList.size();
 		auto strokeIndex = m_StrokeList.size();
-		auto pointIndex = m_PrimitiveList.size();
+		auto pointIndex = p;
 		auto imageIndex = m_TextureList.size();
 		auto linearIndex = m_LinearList.size();
 		auto radialIndex = m_RadialList.size();
+		auto matrixIndex = m_MatrixList.size();
 		auto& points = data[i].Primitive;
 		auto& fills = data[i].FillStyle;
 		auto& strokes = data[i].StrokeStyle;
 		auto& linears = data[i].LinearGradient;
 		auto& radials = data[i].RadialGradient;
+		auto& matrixs = data[i].MatrixList;
+
+		::memcpy(m_PrimitiveList.data() + pointIndex, points.data(), sizeof(primitive_t) * points.size());
 		for (size_t k = 0; k < points.size(); ++k)
 		{
-			auto& point = m_PrimitiveList.emplace_back(points[k]);
+			auto& point = m_PrimitiveList[pointIndex + k];
 			if (point.Fill != -1) point.Fill += fillIndex;
 			if (point.Stroke != -1) point.Stroke += strokeIndex;
+			if (point.Matrix != -1) point.Matrix += matrixIndex;
 		}
 		for (size_t k = 0; k < fills.size(); ++k)
 		{
@@ -251,6 +281,9 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 		}
 		m_LinearList.insert(m_LinearList.end(), linears.begin(), linears.end());
 		m_RadialList.insert(m_RadialList.end(), radials.begin(), radials.end());
+		m_MatrixList.insert(m_MatrixList.end(), matrixs.begin(), matrixs.end());
+
+		p += points.size();
 	}
 
 	// 更新顶点缓冲区
@@ -274,6 +307,10 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VGPrimitive::radial_t) * m_RadialList.size(), m_RadialList.data());
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	glBindBuffer(GL_ARRAY_BUFFER, m_NativeMatrixBuffer);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VGPrimitive::matrix_t) * m_MatrixList.size(), m_MatrixList.data());
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	// 渲染控件视图
 	glUseProgram(m_NativeProgram);
 	glBindVertexArray(m_NativePrimitive);
@@ -284,8 +321,11 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_NativeStrokeBuffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_NativeLinearBuffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_NativeRadialBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_NativeMatrixBuffer);
 
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawArrays(GL_TRIANGLES, 0, m_PrimitiveList.size());
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glBindVertexArray(0);
 	glUseProgram(0);

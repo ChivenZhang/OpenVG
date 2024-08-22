@@ -22,6 +22,16 @@ struct Bezier
 #define BEZIER_EPSILON 1e-2f
 #define MATH_PI  3.14159265358979323846f
 
+static inline float _deg2rad(float degree)
+{
+	return degree * (MATH_PI / 180.0f);
+}
+
+static inline float _rad2deg(float radian)
+{
+	return radian * (180.0f / MATH_PI);
+}
+
 float _atan2(float y, float x)
 {
 	if (y == 0.0f && x == 0.0f) return 0.0f;
@@ -32,16 +42,6 @@ float _atan2(float y, float x)
 	if (x < 0) r = 3.14159274f - r;
 	if (y < 0) return -r;
 	return r;
-}
-
-static inline float _deg2rad(float degree)
-{
-	return degree * (MATH_PI / 180.0f);
-}
-
-static inline float _rad2deg(float radian)
-{
-	return radian * (180.0f / MATH_PI);
 }
 
 static float _lineLength(const VGPoint& pt1, const VGPoint& pt2)
@@ -278,28 +278,27 @@ bool VGTessellate::Path(VGElementRaw element, VGVector<VGPoint>& outPoints)
 {
 	auto points = element->getPointList();
 	auto types = element->getPointTypeList();
-	size_t start = -1;
+	size_t startIndex = -1;
 	for (size_t i = 0, k = 0; i < types.size(); ++i)
 	{
 		switch (types[i])
 		{
 		case VGPointType::MoveTo:
 		{
-			if (start != -1) continue;
-			if (outPoints.size()) outPoints.push_back(VGNonePoint);
+			if (startIndex != -1) continue;
 			outPoints.push_back(points[k]);
-			start = k;
+			startIndex = k;
 			k += 1;
 		} break;
 		case VGPointType::LineTo:
 		{
-			if (start == -1) continue;
+			if (startIndex == -1) continue;
 			outPoints.push_back(points[k]);
 			k += 1;
 		} break;
 		case VGPointType::CubicTo:
 		{
-			if (start == -1) continue;
+			if (startIndex == -1) continue;
 			auto start = VGPoint{ outPoints.back().X, outPoints.back().Y };
 			auto c1 = points[k + 0];
 			auto c2 = points[k + 1];
@@ -318,9 +317,10 @@ bool VGTessellate::Path(VGElementRaw element, VGVector<VGPoint>& outPoints)
 		} break;
 		case VGPointType::Close:
 		{
-			if (start == -1)
+			if (startIndex != -1)
 			{
-				start = -1;
+				outPoints.push_back(VGNonePoint);
+				startIndex = -1;
 			}
 		} break;
 		}
@@ -332,20 +332,35 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 {
 	auto points = element->getPointList();
 	auto types = element->getPointTypeList();
-	TESStesselator* tess = tessNewTess(nullptr);
+	auto result = true;
 	VGVector<VGPoint> contour;
 	Path(element, contour);
-	tessAddContour(tess, 2, contour.data(), sizeof(VGPoint), contour.size());
-	auto result = tessTesselate(tess, TESS_WINDING_ODD, TESS_POLYGONS, 3, 2, nullptr);
-	const float* vertices = tessGetVertices(tess);
-	const int* indices = tessGetElements(tess);
-	const int vertexCount = tessGetVertexCount(tess);
-	const int elementCount = tessGetElementCount(tess);
-	outPoints.resize(vertexCount);
-	::memcpy(outPoints.data(), vertices, vertexCount * sizeof(VGPoint));
-	outIndices.resize(3 * elementCount);
-	::memcpy(outIndices.data(), indices, 3 * elementCount * sizeof(uint32_t));
-	tessDeleteTess(tess);
+	for (size_t i = 0, k = 0; i < contour.size(); ++i)
+	{
+		if (contour[i].X == VGNonePoint.X && contour[i].Y == VGNonePoint.Y)
+		{
+			TESStesselator* tess = tessNewTess(nullptr);
+			tessAddContour(tess, 2, contour.data() + k, sizeof(VGPoint), (i - k));
+			result &= tessTesselate(tess, TESS_WINDING_ODD, TESS_POLYGONS, 3, 2, nullptr);
+			auto vertices = tessGetVertices(tess);
+			auto indices = tessGetElements(tess);
+			auto vertexCount = tessGetVertexCount(tess);
+			auto elementCount = tessGetElementCount(tess);
+			auto vertexOffset = outPoints.size();
+			for (size_t k = 0; k < vertexCount; ++k)
+			{
+				outPoints.push_back({ vertices[2 * k + 0], vertices[2 * k + 1] });
+			}
+			for (size_t k = 0; k < elementCount; ++k)
+			{
+				outIndices.push_back(vertexOffset + indices[3 * k + 0]);
+				outIndices.push_back(vertexOffset + indices[3 * k + 1]);
+				outIndices.push_back(vertexOffset + indices[3 * k + 2]);
+			}
+			tessDeleteTess(tess);
+			k = i + 1;
+		}
+	}
 	return result;
 }
 

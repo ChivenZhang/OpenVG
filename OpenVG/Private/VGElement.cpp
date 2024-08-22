@@ -30,28 +30,40 @@ VGElement::~VGElement()
 
 void VGElement::moveTo(float x, float y)
 {
+	PRIVATE()->ClipCache = nullptr;
+	PRIVATE()->FillCache = nullptr;
+	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointList.push_back({ x, y });
 	PRIVATE()->PointTypeList.push_back(VGPointType::MoveTo);
 }
 
 void VGElement::lineTo(float x, float y)
 {
+	PRIVATE()->ClipCache = nullptr;
+	PRIVATE()->FillCache = nullptr;
+	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointList.push_back({ x, y });
 	PRIVATE()->PointTypeList.push_back(VGPointType::LineTo);
 }
 
 void VGElement::cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float y)
 {
+	PRIVATE()->ClipCache = nullptr;
+	PRIVATE()->FillCache = nullptr;
+	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointList.push_back({ cx1, cy1 });
 	PRIVATE()->PointList.push_back({ cx2, cy2 });
 	PRIVATE()->PointList.push_back({ x, y });
-	PRIVATE()->PointTypeList.push_back(VGPointType::LineTo);
+	PRIVATE()->PointTypeList.push_back(VGPointType::CubicTo);
 }
 
 void VGElement::close()
 {
 	if (PRIVATE()->PointTypeList.empty()) return;
 	if (PRIVATE()->PointTypeList.back() == VGPointType::Close) return;
+	PRIVATE()->ClipCache = nullptr;
+	PRIVATE()->FillCache = nullptr;
+	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointTypeList.push_back(VGPointType::Close);
 }
 

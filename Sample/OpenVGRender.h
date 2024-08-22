@@ -17,6 +17,7 @@ protected:
 	uint32_t m_NativeStrokeBuffer;
 	uint32_t m_NativeLinearBuffer;
 	uint32_t m_NativeRadialBuffer;
+	uint32_t m_NativeMatrixBuffer;
 	uint32_t m_NativePrimitive;
 	VGVector<void*> m_TextureList;
 	VGVector<VGPrimitive::fill_t> m_FillList;
@@ -24,4 +25,5 @@ protected:
 	VGVector<VGPrimitive::primitive_t> m_PrimitiveList;
 	VGVector<VGPrimitive::linear_t> m_LinearList;
 	VGVector<VGPrimitive::radial_t> m_RadialList;
+	VGVector<VGPrimitive::matrix_t> m_MatrixList;
 };
