@@ -229,9 +229,6 @@ void sample(UIContextRef context, SDL_Window* window)
 {
 	auto layout = UINew<UIFlow>();
 	context->addElement(layout);
-	auto style = layout->getStyle();
-	style.Brush = UIGreenBrush;
-	layout->setStyle(style);
 
 	//if (false)
 	{
@@ -262,37 +259,21 @@ void sample(UIContextRef context, SDL_Window* window)
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
 			button->setText("Button0");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIRedBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
 			button->setText("Button1");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIGreenBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
 			button->setText("Button2");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIBlueBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
 			button->setText("Button3");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIBlackBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 	}
 	//if (false)
@@ -304,37 +285,21 @@ void sample(UIContextRef context, SDL_Window* window)
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
 			button->setText("Button0");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIRedBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
 			button->setText("Button1");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIGreenBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
 			button->setText("Button2");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIBlueBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
 			button->setText("Button3");
-			auto style = button->getStyle();
-			style.Normal.Brush = UIBlackBrush;
-			style.Round = { 0,0 };
-			button->setStyle(style);
 		}
 	}
 	//if (false)

@@ -65,7 +65,7 @@ void VGPainter::fill(VGElementRaw element)
 {
 	if (element->getFillStyle() == nullptr) return;
 
-	// if (element->getFillCache() == nullptr)
+	if (element->getFillCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
 		VGVector<VGTessellate::point_t> points;

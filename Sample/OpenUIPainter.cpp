@@ -17,7 +17,8 @@ public:
 	UIRect ClipRect, Viewport;
 	bool EnableCilp = false;
 
-	VGElementRef RectShape;
+	VGElementRef RectFillShape;
+	VGElementRef RectStrokeShape;
 };
 #define PRIVATE() ((OpenUIPainterPrivate*) m_Private)
 #define CONTEXT() (PRIVATE()->Context)
@@ -113,40 +114,41 @@ void OpenUIPainter::drawPolyline(UIArrayView<UIPoint> points)
 
 void OpenUIPainter::drawRect(float x, float y, float width, float height)
 {
-	if (PRIVATE()->RectShape == nullptr)
-	{
-		PRIVATE()->RectShape = VGNew<VGElement>();
-	}
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
-		PRIVATE()->RectShape->reset();
-		PRIVATE()->RectShape->moveTo(x, y);
-		PRIVATE()->RectShape->lineTo(x, y + height);
-		PRIVATE()->RectShape->lineTo(x + width, y + height);
-		PRIVATE()->RectShape->lineTo(x + width, y);
-		PRIVATE()->RectShape->close();
+		if (PRIVATE()->RectFillShape == nullptr)
+		{
+			PRIVATE()->RectFillShape = VGNew<VGElement>();
+			PRIVATE()->RectFillShape->moveTo(0, 0);
+			PRIVATE()->RectFillShape->lineTo(0, 0 + 10);
+			PRIVATE()->RectFillShape->lineTo(0 + 10, 0 + 10);
+			PRIVATE()->RectFillShape->lineTo(0 + 10, 0);
+			PRIVATE()->RectFillShape->close();
+		}
 
-		PRIVATE()->RectShape->setRotate(0);
-		PRIVATE()->RectShape->setScaling({ 1,1 });
-		PRIVATE()->RectShape->setTranslate({ 0,0 });
+		PRIVATE()->RectFillShape->setRotate(0);
+		PRIVATE()->RectFillShape->setScaling({ width * 0.1f , height * 0.1f });
+		PRIVATE()->RectFillShape->setTranslate({ x, y });
 		auto color = getBrush().Color;
-		PRIVATE()->RectShape->setFillColor({ color.R, color.G, color.B, color.A });
-		CONTEXT()->fillElement(PRIVATE()->RectShape);
+		PRIVATE()->RectFillShape->setFillColor({ color.R, color.G, color.B, color.A });
+		CONTEXT()->fillElement(PRIVATE()->RectFillShape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		PRIVATE()->RectShape->reset();
-		PRIVATE()->RectShape->moveTo(x, y);
-		PRIVATE()->RectShape->lineTo(x, y + height);
-		PRIVATE()->RectShape->lineTo(x + width, y + height);
-		PRIVATE()->RectShape->lineTo(x + width, y);
-		PRIVATE()->RectShape->close();
-		PRIVATE()->RectShape->setRotate(0);
-		PRIVATE()->RectShape->setScaling({ 1,1 });
-		PRIVATE()->RectShape->setTranslate({ 0,0 });
+		if (PRIVATE()->RectStrokeShape == nullptr)
+			PRIVATE()->RectStrokeShape = VGNew<VGElement>();
+		PRIVATE()->RectStrokeShape->reset();
+		PRIVATE()->RectStrokeShape->moveTo(x, y);
+		PRIVATE()->RectStrokeShape->lineTo(x, y + height);
+		PRIVATE()->RectStrokeShape->lineTo(x + width, y + height);
+		PRIVATE()->RectStrokeShape->lineTo(x + width, y);
+		PRIVATE()->RectStrokeShape->close();
+		PRIVATE()->RectStrokeShape->setRotate(0);
+		PRIVATE()->RectStrokeShape->setScaling({ 1,1 });
+		PRIVATE()->RectStrokeShape->setTranslate({ 0,0 });
 		auto color = getPen().Color;
-		PRIVATE()->RectShape->setStrokeColor({ color.R, color.G, color.B, color.A });
-		CONTEXT()->strokeElement(PRIVATE()->RectShape);
+		PRIVATE()->RectStrokeShape->setStrokeColor({ color.R, color.G, color.B, color.A });
+		CONTEXT()->strokeElement(PRIVATE()->RectStrokeShape);
 	}
 }
 
