@@ -290,6 +290,8 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 		p += points.size();
 	}
 
+	if (m_PrimitiveIndex == 0) return;
+
 	// 更新顶点缓冲区
 	glBindBuffer(GL_ARRAY_BUFFER, m_NativeVertexBuffer);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(primitive_t) * m_PrimitiveList.size(), m_PrimitiveList.data());

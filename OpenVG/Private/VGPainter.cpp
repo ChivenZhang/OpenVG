@@ -271,7 +271,7 @@ VGVector<VGPrimitive>& VGPainter::getPrimitiveList()
 	return PRIVATE()->PrimitiveList;
 }
 
-VGVector<VGPrimitive> const& VGPainter::getPrimitiveList() const
+VGVector<VGPrimitive> const& VGPainter::getPrimitives() const
 {
 	return PRIVATE()->PrimitiveList;
 }

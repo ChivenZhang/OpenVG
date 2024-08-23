@@ -11,7 +11,7 @@ else()
 link_directories(${CMAKE_SOURCE_DIR}/External/OpenUI/External/x64-windows/lib)
 endif()
 
-add_executable (Sample "main.cpp" "OpenUIRender.h" "OpenUIPainter.h" "OpenUIRender.cpp" "OpenUIPainter.cpp" "OpenVGRender.h" "OpenVGRender.cpp")
+add_executable (Sample "main.cpp" "OpenUIRender.h" "OpenUIPainter.h" "OpenUIRender.cpp" "OpenUIPainter.cpp" "OpenVGRender.h" "OpenVGRender.cpp" "SDL3InputConstant.h" "SDL3InputConstant.cpp")
 add_dependencies(Sample OpenUI OpenVG)
 
 target_include_directories(Sample PRIVATE ${CMAKE_SOURCE_DIR})

@@ -5,6 +5,7 @@
 #include <stb_image.h>
 #include "OpenUIPainter.h"
 #include "OpenUIRender.h"
+#include "SDL3InputConstant.h"
 #include <OpenUI/UIContext.h>
 #include <OpenUI/UIBuilder.h>
 #include <OpenUI/UIHBox.h>
@@ -49,6 +50,10 @@ int main(int argc, char* argv[])
 		SDL_Quit();
 		return -1;
 	}
+	SDL_GL_MakeCurrent(window, context);
+	glClearColor(1, 1, 1, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	SDL_GL_SetSwapInterval(0);
 	auto glewInitResult = glewInit();
 	if (GLEW_OK != glewInitResult)
@@ -79,33 +84,34 @@ int main(int argc, char* argv[])
 			switch (event.type)
 			{
 			case SDL_EVENT_QUIT:
-				SDL_Quit();
-				return 0;
+			{
+				quit = true;
+			} break;
 			case SDL_EVENT_KEY_DOWN:
 			{
-				UIKeyDownEvent event2(event.key.key, event.key.mod, event.key.scancode, event.key.key, event.key.mod, UIString(), event.key.repeat);
+				UIKeyDownEvent event2(SDL3InputConstant::GetKeyboardEnum(event.key.key), SDL3InputConstant::GetModifierEnum(event.key.mod), event.key.scancode, event.key.key, event.key.mod, UIString(), event.key.repeat);
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_KEY_UP:
 			{
-				UIKeyUpEvent event2(event.key.key, event.key.mod, event.key.scancode, event.key.key, event.key.mod, UIString(), event.key.repeat);
+				UIKeyUpEvent event2(SDL3InputConstant::GetKeyboardEnum(event.key.key), SDL3InputConstant::GetModifierEnum(event.key.mod), event.key.scancode, event.key.key, event.key.mod, UIString(), event.key.repeat);
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_TEXT_EDITING:
 			{
-				UITextInputEvent event2(event.key.key, event.key.mod, event.key.scancode, event.key.key, event.key.mod, event.edit.text, event.key.repeat, false, event.edit.start, event.edit.length);
+				UITextInputEvent event2(SDL3InputConstant::GetKeyboardEnum(event.key.key), SDL3InputConstant::GetModifierEnum(event.key.mod), event.key.scancode, event.key.key, event.key.mod, event.edit.text, event.key.repeat, false, event.edit.start, event.edit.length);
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_TEXT_INPUT:
 			{
-				UITextInputEvent event2(event.key.key, event.key.mod, event.key.scancode, event.key.key, event.key.mod, event.edit.text, event.key.repeat, true);
+				UITextInputEvent event2(SDL3InputConstant::GetKeyboardEnum(event.key.key), SDL3InputConstant::GetModifierEnum(event.key.mod), event.key.scancode, event.key.key, event.key.mod, event.edit.text, event.key.repeat, true);
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_MOUSE_MOTION:
 			{
 				int x, y;
 				SDL_GetWindowPosition(window, &x, &y);
-				UIMouseMoveEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, event.button.button, event.button.button, event.key.mod);
+				UIMouseMoveEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetModifierEnum(event.key.mod));
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -114,12 +120,12 @@ int main(int argc, char* argv[])
 				SDL_GetWindowPosition(window, &x, &y);
 				if (event.button.clicks == 1)
 				{
-					UIMouseDownEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, event.button.button, event.button.button, event.key.mod, event.button.clicks);
+					UIMouseDownEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetModifierEnum(event.key.mod), event.button.clicks);
 					openui->sendEvent(nullptr, &event2);
 				}
 				else
 				{
-					UIMouseDblClickEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, event.button.button, event.button.button, event.key.mod, event.button.clicks);
+					UIMouseDblClickEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetModifierEnum(event.key.mod), event.button.clicks);
 					openui->sendEvent(nullptr, &event2);
 				}
 			} break;
@@ -127,28 +133,28 @@ int main(int argc, char* argv[])
 			{
 				int x, y;
 				SDL_GetWindowPosition(window, &x, &y);
-				UIMouseUpEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, event.button.button, event.button.button, event.key.mod);
+				UIMouseUpEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetModifierEnum(event.key.mod));
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_MOUSE_WHEEL:
 			{
 				int x, y;
 				SDL_GetWindowPosition(window, &x, &y);
-				UIMouseWheelEvent event2(event.wheel.x, event.wheel.y, event.wheel.x, event.wheel.y, event.wheel.mouse_x, event.wheel.mouse_y, x + event.wheel.mouse_x, y + event.wheel.mouse_y, event.button.button, event.button.button, event.key.mod);
+				UIMouseWheelEvent event2(event.wheel.x, event.wheel.y, event.wheel.x, event.wheel.y, event.wheel.mouse_x, event.wheel.mouse_y, x + event.wheel.mouse_x, y + event.wheel.mouse_y, SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetModifierEnum(event.key.mod));
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_WINDOW_MOUSE_ENTER:
 			{
 				int x, y;
 				SDL_GetWindowPosition(window, &x, &y);
-				UIMouseEnterEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, event.button.button, event.button.button, event.key.mod);
+				UIMouseEnterEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetModifierEnum(event.key.mod));
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_WINDOW_MOUSE_LEAVE:
 			{
 				int x, y;
 				SDL_GetWindowPosition(window, &x, &y);
-				UIMouseLeaveEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, event.button.button, event.button.button, event.key.mod);
+				UIMouseLeaveEvent event2(event.motion.x, event.motion.y, x + event.motion.x, y + event.motion.y, SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetMouseEnum(event.button.button), SDL3InputConstant::GetModifierEnum(event.key.mod));
 				openui->sendEvent(nullptr, &event2);
 			} break;
 			case SDL_EVENT_WINDOW_SHOWN:
@@ -171,7 +177,7 @@ int main(int argc, char* argv[])
 				UIMoveEvent event2(event.window.data1, event.window.data2);
 				openui->sendEvent(nullptr, &event2);
 			} break;
-			case SDL_EVENT_WINDOW_RESIZED:
+			case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 			{
 				painter->resize(event.window.data1, event.window.data2);
 				UIResizeEvent event2(event.window.data1, event.window.data2);
@@ -210,8 +216,6 @@ int main(int argc, char* argv[])
 		glDisable(GL_SCISSOR_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glClearColor(1, 1, 1, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
 		glViewport((int32_t)client.X, (int32_t)client.Y, (int32_t)client.W, (int32_t)client.H);
 		openui->renderElement(client);
 		SDL_GL_SwapWindow(window);

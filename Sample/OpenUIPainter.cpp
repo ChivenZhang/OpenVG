@@ -420,13 +420,17 @@ void OpenUIPainter::resize(uint32_t width, uint32_t height)
 
 uint32_t OpenUIPainter::getTexture() const
 {
-	auto client = PRIVATE()->Client;
-	glBindFramebuffer(GL_FRAMEBUFFER, PRIVATE()->NativeFrame);
-	glClearColor(1, 1, 1, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	glViewport((int32_t)client.X, (int32_t)client.Y, (int32_t)client.W, (int32_t)client.H);
-	PRIVATE()->Context->renderElement(PRIVATE()->Client);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	auto& primitives = PRIVATE()->Context->getPainter()->getPrimitives();
+	if (primitives.size())
+	{
+		auto client = PRIVATE()->Client;
+		glBindFramebuffer(GL_FRAMEBUFFER, PRIVATE()->NativeFrame);
+		glClearColor(1, 1, 1, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glViewport((int32_t)client.X, (int32_t)client.Y, (int32_t)client.W, (int32_t)client.H);
+		PRIVATE()->Context->renderElement(PRIVATE()->Client);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 	return PRIVATE()->NativeTexture;
 }
 

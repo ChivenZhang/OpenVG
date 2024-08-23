@@ -20,10 +20,10 @@ public:
 	void clip(VGElementRaw element);
 	void fill(VGElementRaw element);
 	void stroke(VGElementRaw element);
+	VGVector<VGPrimitive> const& getPrimitives() const;
 
 private:
 	VGVector<VGPrimitive>& getPrimitiveList();
-	VGVector<VGPrimitive> const& getPrimitiveList() const;
 
 private:
 	VGPainterPrivateRaw m_Private;
