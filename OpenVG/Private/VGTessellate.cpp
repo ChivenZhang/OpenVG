@@ -9,14 +9,13 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 	auto points = element->getPointList();
 	auto types = element->getPointTypeList();
 	microtess::path<float, dynamic_array, microtess::std_rebind_allocator<>> path{};
-	for (size_t i = 0, k = 0, startIndex = -1; i < types.size(); ++i)
+	for (size_t i = 0, k = 0; i < types.size(); ++i)
 	{
 		switch (types[i])
 		{
 		case VGPointType::MoveTo:
 		{
 			path.moveTo({ points[k].X, points[k].Y });
-			startIndex = k;
 			k += 1;
 		} break;
 		case VGPointType::LineTo:
@@ -73,26 +72,22 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 	auto points = element->getPointList();
 	auto types = element->getPointTypeList();
 	microtess::path<float, dynamic_array, microtess::std_rebind_allocator<>> path{};
-	for (size_t i = 0, k = 0, startIndex = -1; i < types.size(); ++i)
+	for (size_t i = 0, k = 0; i < types.size(); ++i)
 	{
 		switch (types[i])
 		{
 		case VGPointType::MoveTo:
 		{
-			if (startIndex != -1) continue;
 			path.moveTo({ points[k].X, points[k].Y });
-			startIndex = k;
 			k += 1;
 		} break;
 		case VGPointType::LineTo:
 		{
-			if (startIndex == -1) continue;
 			path.lineTo({ points[k].X, points[k].Y });
 			k += 1;
 		} break;
 		case VGPointType::CurveTo:
 		{
-			if (startIndex == -1) continue;
 			auto c1 = points[k + 0];
 			auto last = points[k + 1];
 			path.quadraticCurveTo({ c1.X, c1.Y }, { last.X, last.Y });
@@ -100,7 +95,6 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 		} break;
 		case VGPointType::CubicTo:
 		{
-			if (startIndex == -1) continue;
 			auto c1 = points[k + 0];
 			auto c2 = points[k + 1];
 			auto end = points[k + 2];
@@ -109,7 +103,6 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 		} break;
 		case VGPointType::ArcTo:
 		{
-			if (startIndex == -1) continue;
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
 			auto r = points[k + 2];
@@ -119,11 +112,7 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 		} break;
 		case VGPointType::Close:
 		{
-			if (startIndex != -1)
-			{
-				path.closePath();
-				startIndex = -1;
-			}
+			path.closePath();
 		} break;
 		}
 	}
