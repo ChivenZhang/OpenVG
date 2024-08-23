@@ -51,8 +51,6 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	SDL_GL_MakeCurrent(window, context);
-	glClearColor(1, 1, 1, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	SDL_GL_SetSwapInterval(0);
 	auto glewInitResult = glewInit();
@@ -179,6 +177,7 @@ int main(int argc, char* argv[])
 			} break;
 			case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 			{
+				openui->layoutElement();
 				painter->resize(event.window.data1, event.window.data2);
 				UIResizeEvent event2(event.window.data1, event.window.data2);
 				openui->sendEvent(nullptr, &event2);
@@ -216,6 +215,8 @@ int main(int argc, char* argv[])
 		glDisable(GL_SCISSOR_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glClearColor(1, 1, 1, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
 		glViewport((int32_t)client.X, (int32_t)client.Y, (int32_t)client.W, (int32_t)client.H);
 		openui->renderElement(client);
 		SDL_GL_SwapWindow(window);
