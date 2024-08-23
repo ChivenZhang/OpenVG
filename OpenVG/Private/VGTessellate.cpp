@@ -15,33 +15,42 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 		{
 		case VGPointType::MoveTo:
 		{
-			if (startIndex != -1) continue;
 			path.moveTo({ points[k].X, points[k].Y });
 			startIndex = k;
 			k += 1;
 		} break;
 		case VGPointType::LineTo:
 		{
-			if (startIndex == -1) continue;
 			path.lineTo({ points[k].X, points[k].Y });
 			k += 1;
 		} break;
+		case VGPointType::CurveTo:
+		{
+			auto c1 = points[k + 0];
+			auto last = points[k + 1];
+			path.quadraticCurveTo({ c1.X, c1.Y }, { last.X, last.Y });
+			k += 2;
+		} break;
 		case VGPointType::CubicTo:
 		{
-			if (startIndex == -1) continue;
 			auto c1 = points[k + 0];
 			auto c2 = points[k + 1];
-			auto end = points[k + 2];
-			path.cubicBezierCurveTo({ c1.X, c1.Y }, { c2.X, c2.Y }, { end.X, end.Y });
+			auto last = points[k + 2];
+			path.cubicBezierCurveTo({ c1.X, c1.Y }, { c2.X, c2.Y }, { last.X, last.Y });
 			k += 3;
+		} break;
+		case VGPointType::ArcTo:
+		{
+			auto c1 = points[k + 0];
+			auto r1 = points[k + 1];
+			auto r = points[k + 2];
+			auto a1 = points[k + 3];
+			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
+			k += 4;
 		} break;
 		case VGPointType::Close:
 		{
-			if (startIndex != -1)
-			{
-				path.closePath();
-				startIndex = -1;
-			}
+			path.closePath();
 		} break;
 		}
 	}
@@ -81,6 +90,14 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 			path.lineTo({ points[k].X, points[k].Y });
 			k += 1;
 		} break;
+		case VGPointType::CurveTo:
+		{
+			if (startIndex == -1) continue;
+			auto c1 = points[k + 0];
+			auto last = points[k + 1];
+			path.quadraticCurveTo({ c1.X, c1.Y }, { last.X, last.Y });
+			k += 2;
+		} break;
 		case VGPointType::CubicTo:
 		{
 			if (startIndex == -1) continue;
@@ -89,6 +106,16 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 			auto end = points[k + 2];
 			path.cubicBezierCurveTo({ c1.X, c1.Y }, { c2.X, c2.Y }, { end.X, end.Y });
 			k += 3;
+		} break;
+		case VGPointType::ArcTo:
+		{
+			if (startIndex == -1) continue;
+			auto c1 = points[k + 0];
+			auto r1 = points[k + 1];
+			auto r = points[k + 2];
+			auto a1 = points[k + 3];
+			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
+			k += 4;
 		} break;
 		case VGPointType::Close:
 		{
@@ -104,7 +131,7 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 	auto strokeWidth = element->getLineWidth();
 	auto miterLimit = element->getMiterLimit();
 	auto dashOffset = (int32_t)element->getDashOffset();
-	auto dashControl = element->getDashControl();
+	auto dashControl = element->getLineDash();
 	auto strokeCap = microtess::stroke_cap::butt;
 	switch (element->getStrokeStyle()->LineCap)
 	{

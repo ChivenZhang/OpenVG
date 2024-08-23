@@ -19,6 +19,8 @@ public:
 
 	VGElementRef RectFillShape;
 	VGElementRef RectStrokeShape;
+	VGElementRef RoundedRectFillShape;
+	VGElementRef RoundedRectStrokeShape;
 };
 #define PRIVATE() ((OpenUIPainterPrivate*) m_Private)
 #define CONTEXT() (PRIVATE()->Context)
@@ -70,6 +72,26 @@ UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, 
 
 void OpenUIPainter::drawArc(float x, float y, float width, float height, float startAngle, float spanAngle)
 {
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(x, y);
+		shape->arcTo(width * 0.5f, height * 0.5f, width * 0.5f, height * 0.5f, 0.0f, startAngle, spanAngle);
+		shape->close();
+		auto color = getBrush().Color;
+		shape->setFillColor({ color.R, color.G, color.B, color.A });
+		PRIVATE()->Context->fillElement(shape);
+	}
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(x, y);
+		shape->arcTo(width * 0.5f, height * 0.5f, width * 0.5f, height * 0.5f, 0.0f, startAngle, spanAngle);
+		shape->close();
+		auto color = getPen().Color;
+		shape->setStrokeColor({ color.R, color.G, color.B, color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawChord(float x, float y, float width, float height, float startAngle, float spanAngle)
@@ -78,6 +100,24 @@ void OpenUIPainter::drawChord(float x, float y, float width, float height, float
 
 void OpenUIPainter::drawEllipse(float x, float y, float width, float height)
 {
+	if (width <= 0 || height <= 0) return;
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 0, 360);
+		shape->close();
+		shape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
+		PRIVATE()->Context->fillElement(shape);
+	}
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 0, 360);
+		shape->close();
+		shape->setLineWidth(getPen().Width);
+		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawImage(float x, float y, UIImage image, float sx, float sy, float sw, float sh)
@@ -86,30 +126,115 @@ void OpenUIPainter::drawImage(float x, float y, UIImage image, float sx, float s
 
 void OpenUIPainter::drawLine(float x1, float y1, float x2, float y2)
 {
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(x1, y1);
+		shape->lineTo(x2, y2);
+		shape->close();
+		shape->setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape->setStrokeColor({ color.R, color.G, color.B, color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawLines(UIArrayView<UILine> lines)
 {
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGElement>();
+		for (size_t i = 0; i < lines.size(); ++i)
+		{
+			shape->moveTo(lines[i].P0.X, lines[i].P0.Y);
+			shape->lineTo(lines[i].P1.X, lines[i].P1.Y);
+			shape->close();
+		}
+		shape->setLineWidth(getPen().Width);
+		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawPie(float x, float y, float width, float height, float startAngle, float spanAngle)
 {
+	if (width <= 0 || height <= 0) return;
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(0, 0);
+		shape->arcTo(0, 0, width * 0.5f, height * 0.5f, 0, startAngle, spanAngle);
+		shape->close();
+		shape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
+		PRIVATE()->Context->fillElement(shape);
+	}
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(0, 0);
+		shape->arcTo(0, 0, width * 0.5f, height * 0.5f, 0, startAngle, spanAngle);
+		shape->close();
+		shape->setLineWidth(getPen().Width);
+		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawPoint(float x, float y)
 {
+	drawRect(x, y, 1, 1);
 }
 
 void OpenUIPainter::drawPoints(UIArrayView<UIPoint> points)
 {
+	for (size_t i = 0; i < points.size(); ++i)
+	{
+		drawRect(points[i].X, points[i].Y, 1, 1);
+	}
 }
 
 void OpenUIPainter::drawPolygon(UIArrayView<UIPoint> points)
 {
+	if (points.size() < 3) return;
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(points.front().X, points.front().Y);
+		for (size_t i = 1; i < points.size(); ++i)
+			shape->lineTo(points[i].X, points[i].Y);
+		shape->lineTo(points.front().X, points.front().Y);
+		shape->close();
+		shape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
+		PRIVATE()->Context->fillElement(shape);
+	}
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(points.front().X, points.front().Y);
+		for (size_t i = 1; i < points.size(); ++i)
+			shape->lineTo(points[i].X, points[i].Y);
+		shape->lineTo(points.front().X, points.front().Y);
+		shape->close();
+		shape->setLineWidth(getPen().Width);
+		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawPolyline(UIArrayView<UIPoint> points)
 {
+	if (points.size() < 2) return;
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGElement>();
+		shape->moveTo(points.front().X, points.front().Y);
+		for (size_t i = 1; i < points.size(); ++i)
+			shape->lineTo(points[i].X, points[i].Y);
+		shape->close();
+		shape->setLineWidth(getPen().Width);
+		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 void OpenUIPainter::drawRect(float x, float y, float width, float height)
@@ -125,18 +250,18 @@ void OpenUIPainter::drawRect(float x, float y, float width, float height)
 			PRIVATE()->RectFillShape->lineTo(0 + 10, 0);
 			PRIVATE()->RectFillShape->close();
 		}
-
 		PRIVATE()->RectFillShape->setRotate(0);
-		PRIVATE()->RectFillShape->setScaling({ width * 0.1f , height * 0.1f });
 		PRIVATE()->RectFillShape->setTranslate({ x, y });
-		auto color = getBrush().Color;
-		PRIVATE()->RectFillShape->setFillColor({ color.R, color.G, color.B, color.A });
+		PRIVATE()->RectFillShape->setScale({ width * 0.1f , height * 0.1f });
+		PRIVATE()->RectFillShape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
 		CONTEXT()->fillElement(PRIVATE()->RectFillShape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
 		if (PRIVATE()->RectStrokeShape == nullptr)
+		{
 			PRIVATE()->RectStrokeShape = VGNew<VGElement>();
+		}
 		PRIVATE()->RectStrokeShape->reset();
 		PRIVATE()->RectStrokeShape->moveTo(x, y);
 		PRIVATE()->RectStrokeShape->lineTo(x, y + height);
@@ -144,10 +269,10 @@ void OpenUIPainter::drawRect(float x, float y, float width, float height)
 		PRIVATE()->RectStrokeShape->lineTo(x + width, y);
 		PRIVATE()->RectStrokeShape->close();
 		PRIVATE()->RectStrokeShape->setRotate(0);
-		PRIVATE()->RectStrokeShape->setScaling({ 1,1 });
-		PRIVATE()->RectStrokeShape->setTranslate({ 0,0 });
-		auto color = getPen().Color;
-		PRIVATE()->RectStrokeShape->setStrokeColor({ color.R, color.G, color.B, color.A });
+		PRIVATE()->RectStrokeShape->setScale(1, 1);
+		PRIVATE()->RectStrokeShape->setTranslate(0, 0);
+		PRIVATE()->RectStrokeShape->setLineWidth(getPen().Width);
+		PRIVATE()->RectStrokeShape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
 		CONTEXT()->strokeElement(PRIVATE()->RectStrokeShape);
 	}
 }
@@ -162,6 +287,39 @@ void OpenUIPainter::drawRects(UIArrayView<UIRect> rects)
 
 void OpenUIPainter::drawRoundedRect(float x, float y, float width, float height, float xRadius, float yRadius)
 {
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		if (PRIVATE()->RoundedRectFillShape == nullptr)
+		{
+			PRIVATE()->RoundedRectFillShape = VGNew<VGElement>();
+		}
+		PRIVATE()->RoundedRectFillShape->reset();
+		PRIVATE()->RoundedRectFillShape->arcTo(0 + width - xRadius, 0 + yRadius, xRadius, yRadius, 0, -90, 0);
+		PRIVATE()->RoundedRectFillShape->arcTo(0 + width - xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 0, 90);
+		PRIVATE()->RoundedRectFillShape->arcTo(0 + xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 90, 180);
+		PRIVATE()->RoundedRectFillShape->arcTo(0 + xRadius, 0 + yRadius, xRadius, yRadius, 0, 180, 270);
+		PRIVATE()->RoundedRectFillShape->close();
+		PRIVATE()->RoundedRectFillShape->setTranslate({ x, y });
+		PRIVATE()->RoundedRectFillShape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
+		CONTEXT()->fillElement(PRIVATE()->RoundedRectFillShape);
+	}
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		if (PRIVATE()->RoundedRectStrokeShape == nullptr)
+		{
+			PRIVATE()->RoundedRectStrokeShape = VGNew<VGElement>();
+		}
+		PRIVATE()->RoundedRectStrokeShape->reset();
+		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + width - xRadius, 0 + yRadius, xRadius, yRadius, 0, -90, 0);
+		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + width - xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 0, 90);
+		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 90, 180);
+		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + xRadius, 0 + yRadius, xRadius, yRadius, 0, 180, 270);
+		PRIVATE()->RoundedRectStrokeShape->close();
+		PRIVATE()->RoundedRectStrokeShape->setTranslate({ x, y });
+		PRIVATE()->RoundedRectStrokeShape->setLineWidth(getPen().Width);
+		PRIVATE()->RoundedRectStrokeShape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
+		CONTEXT()->strokeElement(PRIVATE()->RoundedRectStrokeShape);
+	}
 }
 
 void OpenUIPainter::drawText(float x, float y, float width, float height, const UIString& text, UIRectRaw boundingRect, float cursor, UIRectRaw cursorRect)

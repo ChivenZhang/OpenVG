@@ -58,7 +58,7 @@ void VGPainter::clip(VGElementRaw element)
 	auto& matrixs = result.MatrixList;
 
 	auto& matrix = matrixs.emplace_back();
-	matrix = VGFloat3x3::Transform(element->getTranslate().X, element->getTranslate().Y, element->getRotate(), element->getScaling().X, element->getScaling().Y);
+	matrix = VGFloat3x3::Transform(element->getTranslate().X, element->getTranslate().Y, element->getRotate(), element->getScale().X, element->getScale().Y);
 }
 
 void VGPainter::fill(VGElementRaw element)
@@ -81,12 +81,9 @@ void VGPainter::fill(VGElementRaw element)
 				auto point0 = points[index0];
 				auto point1 = points[index1];
 				auto point2 = points[index2];
-				auto& primitive0 = primitives.emplace_back();
-				primitive0 = { point0.X, point0.Y, -1, -1, 0, };
-				auto& primitive1 = primitives.emplace_back();
-				primitive1 = { point1.X, point1.Y, -1, -1, 0, };
-				auto& primitive2 = primitives.emplace_back();
-				primitive2 = { point2.X, point2.Y, -1, -1, 0, };
+				primitives.emplace_back(VGPrimitive::primitive_t{ point0.X, point0.Y, -1, -1, 0, });
+				primitives.emplace_back(VGPrimitive::primitive_t{ point1.X, point1.Y, -1, -1, 0, });
+				primitives.emplace_back(VGPrimitive::primitive_t{ point2.X, point2.Y, -1, -1, 0, });
 			}
 		}
 		element->setFillCache(cache);
@@ -103,7 +100,7 @@ void VGPainter::fill(VGElementRaw element)
 	auto& matrixs = result.MatrixList;
 
 	auto& matrix = matrixs.emplace_back();
-	matrix = VGFloat3x3::Transform(element->getTranslate().X, element->getTranslate().Y, element->getRotate(), element->getScaling().X, element->getScaling().Y);
+	matrix = VGFloat3x3::Transform(element->getTranslate().X, element->getTranslate().Y, element->getRotate(), element->getScale().X, element->getScale().Y);
 
 	for (size_t i = 0; i < primitives.size(); ++i)
 	{
@@ -169,7 +166,7 @@ void VGPainter::stroke(VGElementRaw element)
 {
 	if (element->getStrokeStyle() == nullptr) return;
 
-	// if (element->getStrokeCache() == nullptr)
+	if (element->getStrokeCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
 		VGVector<VGTessellate::point_t> points;
@@ -207,7 +204,7 @@ void VGPainter::stroke(VGElementRaw element)
 	auto& matrixs = result.MatrixList;
 
 	auto& matrix = matrixs.emplace_back();
-	matrix = VGFloat3x3::Transform(element->getTranslate().X, element->getTranslate().Y, element->getRotate(), element->getScaling().X, element->getScaling().Y);
+	matrix = VGFloat3x3::Transform(element->getTranslate().X, element->getTranslate().Y, element->getRotate(), element->getScale().X, element->getScale().Y);
 
 	for (size_t i = 0; i < primitives.size(); ++i)
 	{

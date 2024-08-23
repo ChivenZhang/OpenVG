@@ -1,7 +1,7 @@
 #include "OpenVGRender.h"
 #include <GL/glew.h>
 
-#define OPENVG_MAX_TRIANGLE 10240
+#define OPENVG_MAX_TRIANGLE 102400
 
 OpenVGRender::OpenVGRender()
 {
@@ -82,7 +82,6 @@ OpenVGRender::OpenVGRender()
 		layout (location = 1) in ivec2 _style;
 		layout (location = 2) in ivec2 _matrix;
 		out vec2 uv;
-		out vec2 test;
 		flat out int fill;
 		flat out int stroke;
 		)") + common + R"(
@@ -93,7 +92,6 @@ OpenVGRender::OpenVGRender()
 			mat3 matrix = MatrixList[_matrix.x];
 			vec2 vertex = vec2(matrix * vec3(_point, 1.0)) * Viewport;
 			uv = vec2(vertex.x, 1.0-vertex.y);
-			test = _point;
 			gl_Position = vec4(2 * vertex - 1, 0.0, 1.0);
 		}
 	)";
@@ -101,7 +99,6 @@ OpenVGRender::OpenVGRender()
 	auto fsource = VGString(R"(
 		#version 450
 		in vec2 uv;
-		in vec2 test;
 		flat in int fill;
 		flat in int stroke;
 		layout (location = 0) out vec4 color;
@@ -239,13 +236,12 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 	m_TextureList.clear();
 	m_LinearList.clear();
 	m_RadialList.clear();
-	m_PrimitiveList.clear();
 	m_MatrixList.clear();
-
+	m_PrimitiveIndex = 0;
 	for (size_t i = 0, k = 0; i < data.size(); ++i)
 	{
 		k += data[i].Primitive.size();
-		if (i + 1 == data.size()) m_PrimitiveList.resize(k);
+		if (i + 1 == data.size()) m_PrimitiveList.resize(std::max<size_t>(k, m_PrimitiveList.size()));
 	}
 
 	for (size_t i = 0, p = 0; i < data.size(); ++i)
@@ -264,6 +260,7 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 		auto& radials = data[i].RadialGradient;
 		auto& matrixs = data[i].MatrixList;
 
+		m_PrimitiveIndex += points.size();
 		::memcpy(m_PrimitiveList.data() + pointIndex, points.data(), sizeof(primitive_t) * points.size());
 		for (size_t k = 0; k < points.size(); ++k)
 		{
@@ -330,7 +327,9 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_NativeRadialBuffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_NativeMatrixBuffer);
 
-	glDrawArrays(GL_TRIANGLES, 0, m_PrimitiveList.size());
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawArrays(GL_TRIANGLES, 0, std::min<size_t>(m_PrimitiveIndex, 3 * OPENVG_MAX_TRIANGLE));
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glBindVertexArray(0);
 	glUseProgram(0);

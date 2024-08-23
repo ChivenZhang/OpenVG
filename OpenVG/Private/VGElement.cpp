@@ -9,7 +9,7 @@ public:
 	VGVector<VGPointType> PointTypeList;
 	VGPrimitiveRef ClipCache, FillCache, StrokeCache;
 	float Rotation = 0;
-	VGFloat2 Translate, Scaling;
+	VGFloat2 Translate = { 0,0 }, Scaling = { 1,1 };
 };
 #define PRIVATE() ((VGElementPrivateData*) m_Private)
 
@@ -41,6 +41,16 @@ void VGElement::lineTo(float x, float y)
 	PRIVATE()->PointTypeList.push_back(VGPointType::LineTo);
 }
 
+void VGElement::curveTo(float cx1, float cy1, float x, float y)
+{
+	PRIVATE()->ClipCache = nullptr;
+	PRIVATE()->FillCache = nullptr;
+	PRIVATE()->StrokeCache = nullptr;
+	PRIVATE()->PointList.push_back({ cx1, cy1 });
+	PRIVATE()->PointList.push_back({ x, y });
+	PRIVATE()->PointTypeList.push_back(VGPointType::CurveTo);
+}
+
 void VGElement::cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float y)
 {
 	PRIVATE()->ClipCache = nullptr;
@@ -50,6 +60,18 @@ void VGElement::cubicTo(float cx1, float cy1, float cx2, float cy2, float x, flo
 	PRIVATE()->PointList.push_back({ cx2, cy2 });
 	PRIVATE()->PointList.push_back({ x, y });
 	PRIVATE()->PointTypeList.push_back(VGPointType::CubicTo);
+}
+
+void VGElement::arcTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2)
+{
+	PRIVATE()->ClipCache = nullptr;
+	PRIVATE()->FillCache = nullptr;
+	PRIVATE()->StrokeCache = nullptr;
+	PRIVATE()->PointList.push_back({ cx1, cy1 });
+	PRIVATE()->PointList.push_back({ rx, ry });
+	PRIVATE()->PointList.push_back({ VGDeg2Rad(r), 0 });
+	PRIVATE()->PointList.push_back({ VGDeg2Rad(a1), VGDeg2Rad(a2) });
+	PRIVATE()->PointTypeList.push_back(VGPointType::ArcTo);
 }
 
 void VGElement::close()
@@ -73,12 +95,12 @@ void VGElement::reset()
 	PRIVATE()->PointTypeList.clear();
 }
 
-VGFloat2 VGElement::getScaling() const
+VGFloat2 VGElement::getScale() const
 {
 	return PRIVATE()->Scaling;
 }
 
-void VGElement::setScaling(VGFloat2 value)
+void VGElement::setScale(VGFloat2 value)
 {
 	PRIVATE()->Scaling = value;
 }
@@ -139,18 +161,6 @@ void VGElement::setLineWidth(float value)
 	PRIVATE()->StrokeStyle->LineWidth = value;
 }
 
-float VGElement::getDashOffset() const
-{
-	if (PRIVATE()->StrokeStyle == nullptr) return float();
-	return PRIVATE()->StrokeStyle->DashOffset;
-}
-
-void VGElement::setDashOffset(float value)
-{
-	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
-	PRIVATE()->StrokeStyle->DashOffset = value;
-}
-
 float VGElement::getMiterLimit() const
 {
 	if (PRIVATE()->StrokeStyle == nullptr) return float();
@@ -187,16 +197,23 @@ void VGElement::setLineJoin(VGStrokeJoin value)
 	PRIVATE()->StrokeStyle->LineJoin = value;
 }
 
-VGArrayView<const float> VGElement::getDashControl() const
+float VGElement::getDashOffset() const
+{
+	if (PRIVATE()->StrokeStyle == nullptr) return float();
+	return PRIVATE()->StrokeStyle->DashOffset;
+}
+
+VGArrayView<const float> VGElement::getLineDash() const
 {
 	if (PRIVATE()->StrokeStyle == nullptr) return VGArrayView<const float>();
 	return PRIVATE()->StrokeStyle->DashControl;
 }
 
-void VGElement::setDashControl(VGVector<float> value)
+void VGElement::setLineDash(VGVector<float> value, float offset)
 {
 	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->DashControl = value;
+	PRIVATE()->StrokeStyle->DashOffset = offset;
 }
 
 VGFillStyleRaw VGElement::getFillStyle() const

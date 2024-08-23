@@ -435,7 +435,9 @@ enum class VGPointType : uint8_t
 	Close = 0, ///< Ends the current sub-path and connects it with its initial point. This command doesn't expect any points.
 	MoveTo,    ///< Sets a new initial point of the sub-path and a new current point. This command expects 1 point: the starting position.
 	LineTo,    ///< Draws a line from the current point to the given point and sets a new value of the current point. This command expects 1 point: the end-position of the line.
+	CurveTo,
 	CubicTo,   ///< Draws a cubic Bezier curve from the current point to the given point using two given control points and sets a new value of the current point. This command expects 3 points: the 1st control-point, the 2nd control-point, the end-point of the curve.
+	ArcTo,
 };
 
 struct VGColor
@@ -470,13 +472,23 @@ enum class VGStrokeJoin : uint8_t
 	Miter      ///< The outer corner of the joined path segments is spiked. The spike is created by extension beyond the join point of the outer edges of the stroke until they intersect. In case the extension goes beyond the limit, the join style is converted to the Bevel style.
 };
 
+#define VG_FILL_FLAGS_LINEAR 0x0001
+#define VG_FILL_FLAGS_RADIAL 0x0002
+#define VG_STROKE_FLAGS_LINEAR 0x0001
+#define VG_STROKE_FLAGS_RADIAL 0x0002
 struct VGPrimitive
 {
 	static constexpr int MAX_STOP_COUNT = 16;
+	struct primitive_t
+	{
+		float X = 0, Y = 0;
+		int32_t Fill = -1, Stroke = -1;
+		int32_t Matrix = -1, _Unused = -1;
+	};
 	struct fill_t
 	{
 		VGColor Color;
-		int32_t Flags = 0;
+		int32_t Flags = -1;
 		int32_t Image = -1;
 		int32_t Linear = -1;
 		int32_t Radial = -1;
@@ -484,7 +496,7 @@ struct VGPrimitive
 	struct stroke_t
 	{
 		VGColor Color;
-		int32_t Flags = 0;
+		int32_t Flags = -1;
 		int32_t Image = -1;
 		int32_t Linear = -1;
 		int32_t Radial = -1;
@@ -495,7 +507,7 @@ struct VGPrimitive
 		VGFloat2  GradStartPos;
 		VGFloat2  GradEndPos;
 		VGFloat4  StopPoints[MAX_STOP_COUNT / 4];
-		VGColor  StopColors[MAX_STOP_COUNT];
+		VGColor   StopColors[MAX_STOP_COUNT];
 	};
 	struct radial_t
 	{
@@ -503,13 +515,7 @@ struct VGPrimitive
 		VGFloat2  CenterPos;
 		VGFloat2  Radius;
 		VGFloat4  StopPoints[MAX_STOP_COUNT / 4];
-		VGColor  StopColors[MAX_STOP_COUNT];
-	};
-	struct primitive_t
-	{
-		float X = 0, Y = 0;
-		int32_t Fill = -1, Stroke = -1;
-		int32_t Matrix = -1, _Unused = -1;
+		VGColor   StopColors[MAX_STOP_COUNT];
 	};
 	using image_t = VGImage;
 	using matrix_t = VGFloat3x3;
@@ -524,3 +530,9 @@ struct VGPrimitive
 };
 using VGPrimitiveRef = VGRef<VGPrimitive>;
 using VGPrimitiveRaw = VGRaw<VGPrimitive>;
+
+enum class VGTextDirection : uint8_t
+{
+	L2R = 0,
+	R2L,
+};

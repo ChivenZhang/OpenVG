@@ -46,18 +46,22 @@ public:
 
 	void moveTo(float x, float y);
 	void lineTo(float x, float y);
+	void curveTo(float cx1, float cy1, float x, float y);
 	void cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float y);
+	void arcTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2);
 	void close();
 	void reset();
 
-	VGFloat2 getScaling() const;
-	void setScaling(VGFloat2 value);
+	VGFloat2 getScale() const;
+	void setScale(VGFloat2 value);
+	void setScale(float sx, float sy) { setScale({ sx, sy }); }
 
 	float getRotate() const;
 	void setRotate(float value);
 
 	VGFloat2 getTranslate() const;
 	void setTranslate(VGFloat2 value);
+	void setTranslate(float tx, float ty) { setTranslate({ tx, ty }); }
 
 	VGColor getFillColor() const;
 	void setFillColor(VGColor value);
@@ -68,9 +72,6 @@ public:
 	float getLineWidth() const;
 	void setLineWidth(float value);
 
-	float getDashOffset() const;
-	void setDashOffset(float value);
-
 	float getMiterLimit() const;
 	void setMiterLimit(float value);
 
@@ -80,8 +81,9 @@ public:
 	VGStrokeJoin getLineJoin() const;
 	void setLineJoin(VGStrokeJoin value);
 
-	VGArrayView<const float> getDashControl() const;
-	void setDashControl(VGVector<float> value);
+	float getDashOffset() const;
+	VGArrayView<const float> getLineDash() const;
+	void setLineDash(VGVector<float> value, float offset = 0);
 
 private:
 	VGFillStyleRaw getFillStyle() const;
