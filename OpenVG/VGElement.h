@@ -49,6 +49,8 @@ public:
 	void curveTo(float cx1, float cy1, float x, float y);
 	void cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float y);
 	void arcTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2);
+	void pieTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2);
+	void chordTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2);
 	void close();
 	void reset();
 
