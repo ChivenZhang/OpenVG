@@ -17,25 +17,55 @@ public:
 	~VGShape();
 
 	void arc(float x, float y, float width, float height, float startAngle, float spanAngle);
+	void pie(float x, float y, float width, float height, float startAngle, float spanAngle);
 	void chord(float x, float y, float width, float height, float startAngle, float spanAngle);
 	void ellipse(float x, float y, float width, float height);
-	void ellipse(float x, float y, float width, float height, float startAngle, float spanAngle);
+	void rect(float x, float y, float width, float height, float roundX = 0, float roundY = 0);
 	void line(float x1, float y1, float x2, float y2);
+	void point(float x, float y);
 
-	template<typename... Args>
-	void linesTo(float x, float y, Args... args)
+	template<class... Args>
+	void points(float x, float y, Args... args)
 	{
-		lineTo(x, y); linesTo(args...);
+		point(x, y);
+		points(args...);
+	}
+	void points(float x, float y)
+	{
+		point(x, y);
 	}
 
-	template<typename... Args>
-	void linesTo(VGPoint p, Args... args)
+	template<class... Args>
+	void points(VGPoint p, Args... args)
 	{
-		linesTo(p); linesTo(args...); return *this;
+		point(p.X, p.Y);
+		points(args...);
 	}
-	void linesTo3(VGPoint p)
+	void points(VGPoint p)
 	{
-		lineTo(p.X, p.Y);
+		point(p.X, p.Y);
+	}
+
+	template<class... Args>
+	void lines(VGPoint p1, VGPoint p2, Args... args)
+	{
+		line(p1.X, p1.Y, p2.X, p2.Y);
+		lines(args...);
+	}
+	void lines(VGPoint p1, VGPoint p2)
+	{
+		line(p1.X, p1.Y, p2.X, p2.Y);
+	}
+
+	template<class... Args>
+	void lines(float x1, float y1, float x2, float y2, Args... args)
+	{
+		line(x1, y1, x2, y2);
+		lines(args...);
+	}
+	void lines(float x1, float y1, float x2, float y2)
+	{
+		line(x1, y1, x2, y2);
 	}
 
 private:

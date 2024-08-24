@@ -47,6 +47,24 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
 			k += 4;
 		} break;
+		case VGPointType::PieTo:
+		{
+			auto c1 = points[k + 0];
+			auto r1 = points[k + 1];
+			auto r = points[k + 2];
+			auto a1 = points[k + 3];
+			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
+			k += 4;
+		} break;
+		case VGPointType::ChordTo:
+		{
+			auto c1 = points[k + 0];
+			auto r1 = points[k + 1];
+			auto r = points[k + 2];
+			auto a1 = points[k + 3];
+			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
+			k += 4;
+		} break;
 		case VGPointType::Close:
 		{
 			path.closePath();

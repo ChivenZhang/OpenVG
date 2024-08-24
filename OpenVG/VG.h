@@ -438,6 +438,8 @@ enum class VGPointType : uint8_t
 	CurveTo,
 	CubicTo,   ///< Draws a cubic Bezier curve from the current point to the given point using two given control points and sets a new value of the current point. This command expects 3 points: the 1st control-point, the 2nd control-point, the end-point of the curve.
 	ArcTo,
+	PieTo,
+	ChordTo,
 };
 
 struct VGColor

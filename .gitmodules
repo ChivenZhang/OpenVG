@@ -3,4 +3,4 @@
 	url = https://github.com/ChivenZhang/OpenUI.git
 [submodule "External/micro-tess"]
 	path = External/micro-tess
-	url = https://github.com/micro-gl/micro-tess.git
+	url = https://github.com/ChivenZhang/micro-tess.git
