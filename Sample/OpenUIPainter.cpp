@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <OpenVG/VGContext.h>
 #include <OpenVG/VGShape.h>
+#include <OpenVG/VGText.h>
 
 class OpenUIPainterPrivate : public UIPainterPrivate
 {
@@ -21,6 +22,8 @@ public:
 	VGElementRef RectStrokeShape;
 	VGElementRef RoundedRectFillShape;
 	VGElementRef RoundedRectStrokeShape;
+	VGTextRef TextFillShape;
+	VGTextRef TextStrokeShape;
 };
 #define PRIVATE() ((OpenUIPainterPrivate*) m_Private)
 #define CONTEXT() (PRIVATE()->Context)
@@ -324,6 +327,32 @@ void OpenUIPainter::drawRoundedRect(float x, float y, float width, float height,
 
 void OpenUIPainter::drawText(float x, float y, float width, float height, const UIString& text, UIRectRaw boundingRect, float cursor, UIRectRaw cursorRect)
 {
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		if (PRIVATE()->TextFillShape == nullptr)
+		{
+			PRIVATE()->TextFillShape = VGNew<VGText>();
+			PRIVATE()->TextFillShape->setFamily(getFont().Family);
+			PRIVATE()->TextFillShape->setText(0, 0, width, height, text);
+		}
+		PRIVATE()->TextFillShape->setRotate(0);
+		PRIVATE()->TextFillShape->setTranslate(0, 0);
+		PRIVATE()->TextFillShape->setScale(getFont().Size * 0.01f, getFont().Size * 0.01f);
+		PRIVATE()->TextFillShape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
+		PRIVATE()->Context->fillElement(PRIVATE()->TextFillShape);
+
+		/*auto shape = PRIVATE()->TextFillShape;
+		shape->setLineWidth(4);
+		PRIVATE()->Context->strokeElement(shape);*/
+	}
+	if (PRIVATE()->Pen.Style != UIPen::NoPen)
+	{
+		auto shape = VGNew<VGText>();
+		shape->setText(x, y, width, height, text);
+		shape->setLineWidth(getPen().Width);
+		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
+		PRIVATE()->Context->strokeElement(shape);
+	}
 }
 
 UIPen const& OpenUIPainter::getPen() const

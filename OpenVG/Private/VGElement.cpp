@@ -71,7 +71,6 @@ void VGElement::arcTo(float cx1, float cy1, float rx, float ry, float r, float a
 	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointList.push_back({ cx1, cy1 });
 	PRIVATE()->PointList.push_back({ rx, ry });
-	PRIVATE()->PointList.push_back({ VGDeg2Rad(r), 0 });
 	PRIVATE()->PointList.push_back({ VGDeg2Rad(a1), VGDeg2Rad(a2) });
 	PRIVATE()->PointTypeList.push_back(VGPointType::ArcTo);
 }
@@ -83,7 +82,6 @@ void VGElement::pieTo(float cx1, float cy1, float rx, float ry, float r, float a
 	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointList.push_back({ cx1, cy1 });
 	PRIVATE()->PointList.push_back({ rx, ry });
-	PRIVATE()->PointList.push_back({ VGDeg2Rad(r), 0 });
 	PRIVATE()->PointList.push_back({ VGDeg2Rad(a1), VGDeg2Rad(a2) });
 	PRIVATE()->PointTypeList.push_back(VGPointType::PieTo);
 }
@@ -95,7 +93,6 @@ void VGElement::chordTo(float cx1, float cy1, float rx, float ry, float r, float
 	PRIVATE()->StrokeCache = nullptr;
 	PRIVATE()->PointList.push_back({ cx1, cy1 });
 	PRIVATE()->PointList.push_back({ rx, ry });
-	PRIVATE()->PointList.push_back({ VGDeg2Rad(r), 0 });
 	PRIVATE()->PointList.push_back({ VGDeg2Rad(a1), VGDeg2Rad(a2) });
 	PRIVATE()->PointTypeList.push_back(VGPointType::ChordTo);
 }

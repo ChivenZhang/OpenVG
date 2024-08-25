@@ -39,6 +39,43 @@
 
 // ============================================
 
+#ifdef _WIN32
+#	define OPENVG_PLATFORM_WINDOWS
+#elif defined(__APPLE__)
+#	define OPENVG_PLATFORM_APPLE
+#	if defined(TARGET_OS_OSX)
+#		define OPENVG_PLATFORM_MACOS
+#	elif defined(TARGET_OS_IPHONE)
+#		define OPENVG_PLATFORM_IPHONE
+#	endif
+#elif defined(__ANDROID__)
+#	define OPENVG_PLATFORM_ANDROID
+#elif defined(__FreeBSD__)
+#	define OPENVG_PLATFORM_FREEBSD
+#elif defined(__NetBSD__)
+#	define OPENVG_PLATFORM_NETBSD
+#elif defined(__sun)
+#	define OPENVG_PLATFORM_SOLARIS
+#elif defined(__linux__) || defined(__linux)
+#	define OPENVG_PLATFORM_LINUX
+#elif defined(__unix__) || defined(__unix)
+#	define OPENVG_PLATFORM_UNIX
+#endif
+
+#if defined(_WIN64) || defined(__x86_64__)
+#	define OPENVG_PLATFORM_64
+#elif defined(_WIN32) || defined(__i386__)
+#	define OPENVG_PLATFORM_32
+#endif
+
+#ifdef OPENVG_PLATFORM_WINDOWS
+#	ifdef _DEBUG
+#		define OPENVG_DEBUG_MODE
+#	endif
+#endif
+
+// ============================================
+
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -533,8 +570,53 @@ struct VGPrimitive
 using VGPrimitiveRef = VGRef<VGPrimitive>;
 using VGPrimitiveRaw = VGRaw<VGPrimitive>;
 
-enum class VGTextDirection : uint8_t
+enum VGTextStyle
 {
-	L2R = 0,
-	R2L,
+	StyleNormal,
+	StyleOblique,
+	StyleItalic,
+};
+
+enum VGTextWeight
+{
+	WeightThin = 100,
+	WeightUltralight = 200,
+	WeightLight = 300,
+	WeightSemilight = 350,
+	WeightBook = 380,
+	WeightNormal = 400,
+	WeightMedium = 500,
+	WeightSemibold = 600,
+	WeightBold = 700,
+	WeightUltrabold = 800,
+	WeightHeavy = 900,
+	WeightUltraheavy = 1000,
+};
+
+enum VGTextAlgin
+{
+	AlignLeft = 0x0001,
+	AlignRight = 0x0002,
+	AlignCenter = 0x0004,
+	AlignJustify = 0x0008,
+	AlignTop = 0x0020,
+	AlignBottom = 0x0040,
+	AlignVCenter = 0x0080,
+	AlignBaseline = 0x0100,
+};
+using VGTextAlgins = uint32_t;
+
+enum VGTextDirection
+{
+	DirectionAutoLayout = 0,
+	DirectionLeftToRight = 1,
+	DirectionRightToLeft = 2,
+};
+
+enum VGTextEllipsize
+{
+	EllipsizeNone = 0,
+	EllipsizeStart = 1,
+	EllipsizeMiddle = 2,
+	EllipsizeEnd = 3,
 };

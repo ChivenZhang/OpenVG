@@ -7,7 +7,7 @@
 #include "VGShape.h"
 #include "VGShape.h"
 
-class VGShapePrivateData : public VGShapePrivate
+class VGShapePrivateData : public VGElementPrivate
 {
 public:
 	VGFillStyle FillStyle;

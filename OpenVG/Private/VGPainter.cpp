@@ -20,6 +20,9 @@ VGPainter::~VGPainter()
 
 void VGPainter::clip(VGElementRaw element)
 {
+	if (element->getPointList().empty()) return;
+	if (element->getPointTypeList().empty()) return;
+
 	if (element->getClipCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
@@ -63,6 +66,8 @@ void VGPainter::clip(VGElementRaw element)
 
 void VGPainter::fill(VGElementRaw element)
 {
+	if (element->getPointList().empty()) return;
+	if (element->getPointTypeList().empty()) return;
 	if (element->getFillStyle() == nullptr) return;
 
 	if (element->getFillCache() == nullptr)
@@ -164,6 +169,8 @@ void VGPainter::fill(VGElementRaw element)
 
 void VGPainter::stroke(VGElementRaw element)
 {
+	if (element->getPointList().empty()) return;
+	if (element->getPointTypeList().empty()) return;
 	if (element->getStrokeStyle() == nullptr) return;
 
 	if (element->getStrokeCache() == nullptr)

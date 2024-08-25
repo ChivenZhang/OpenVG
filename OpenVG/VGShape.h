@@ -2,14 +2,6 @@
 #include "VGElement.h"
 
 /// @brief 
-class VGShapePrivate
-{
-public:
-	virtual ~VGShapePrivate() = default;
-};
-using VGShapePrivateRaw = VGRaw<VGShapePrivate>;
-
-/// @brief 
 class OPENVG_API VGShape : public VGElement
 {
 public:
@@ -69,7 +61,7 @@ public:
 	}
 
 private:
-	VGShapePrivateRaw m_Private;
+	VGElementPrivateRaw m_Private;
 };
 using VGShapeRef = VGRef<VGShape>;
 using VGShapeRaw = VGRaw<VGShape>;

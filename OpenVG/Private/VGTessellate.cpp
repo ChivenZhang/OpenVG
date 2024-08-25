@@ -1,4 +1,6 @@
 #include "VGTessellate.h"
+#include "VGPath.h"
+#include <tesselator.h>
 #include <micro-tess/path.h>
 #include <micro-tess/static_array.h>
 #include <micro-tess/dynamic_array.h>
@@ -8,26 +10,27 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 {
 	auto points = element->getPointList();
 	auto types = element->getPointTypeList();
-	microtess::path<float, dynamic_array, microtess::std_rebind_allocator<>> path{};
+
+	VGPath path;
 	for (size_t i = 0, k = 0; i < types.size(); ++i)
 	{
 		switch (types[i])
 		{
 		case VGPointType::MoveTo:
 		{
-			path.moveTo({ points[k].X, points[k].Y });
+			path.moveTo(points[k].X, points[k].Y);
 			k += 1;
 		} break;
 		case VGPointType::LineTo:
 		{
-			path.lineTo({ points[k].X, points[k].Y });
+			path.lineTo(points[k].X, points[k].Y);
 			k += 1;
 		} break;
 		case VGPointType::CurveTo:
 		{
 			auto c1 = points[k + 0];
 			auto last = points[k + 1];
-			path.quadraticCurveTo({ c1.X, c1.Y }, { last.X, last.Y });
+			path.quadraticCurveTo(c1.X, c1.Y, last.X, last.Y);
 			k += 2;
 		} break;
 		case VGPointType::CubicTo:
@@ -35,35 +38,32 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 			auto c1 = points[k + 0];
 			auto c2 = points[k + 1];
 			auto last = points[k + 2];
-			path.cubicBezierCurveTo({ c1.X, c1.Y }, { c2.X, c2.Y }, { last.X, last.Y });
+			path.cubicBezierCurveTo(c1.X, c1.Y, c2.X, c2.Y, last.X, last.Y);
 			k += 3;
 		} break;
 		case VGPointType::ArcTo:
 		{
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
-			auto r = points[k + 2];
-			auto a1 = points[k + 3];
-			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
-			k += 4;
+			auto a1 = points[k + 2];
+			path.arc(c1.X, c1.Y, r1.X, a1.X, a1.Y, false);
+			k += 3;
 		} break;
 		case VGPointType::PieTo:
 		{
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
-			auto r = points[k + 2];
-			auto a1 = points[k + 3];
-			path.pie({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
-			k += 4;
+			auto a1 = points[k + 2];
+			path.arc(c1.X, c1.Y, r1.X, a1.X, a1.Y, false);
+			k += 3;
 		} break;
 		case VGPointType::ChordTo:
 		{
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
-			auto r = points[k + 2];
-			auto a1 = points[k + 3];
-			path.chord({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
-			k += 4;
+			auto a1 = points[k + 2];
+			path.arc(c1.X, c1.Y, r1.X, a1.X, a1.Y, false);
+			k += 3;
 		} break;
 		case VGPointType::Close:
 		{
@@ -71,17 +71,31 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 		} break;
 		}
 	}
-	auto& buffers = path.tessellateFill<>(microtess::fill_rule::even_odd, microtess::tess_quality::fine, false, false);
-	auto& vertices = buffers.output_vertices;
-	auto& indices = buffers.output_indices;
-	if (vertices.size() && indices.size())
+	auto tessellatedPath = path.tessellatePath(2.0);
+
+	TESStesselator* tess = tessNewTess(nullptr);
+	tessAddContour(tess, 2, tessellatedPath.data(), sizeof(VGPoint), tessellatedPath.size());
+	if (tessTesselate(tess, TESS_WINDING_ODD, TESS_POLYGONS, 3, 2, nullptr))
 	{
-		outPoints.resize(vertices.size());
-		::memcpy(outPoints.data(), vertices.data(), sizeof(VGFloat2) * vertices.size());
-		outIndices.resize(indices.size());
-		::memcpy(outIndices.data(), indices.data(), sizeof(uint32_t) * indices.size());
+		auto vertices = tessGetVertices(tess);
+		auto indices = tessGetElements(tess);
+		auto vertexCount = tessGetVertexCount(tess);
+		auto elementCount = tessGetElementCount(tess);
+		for (size_t k = 0; k < vertexCount; ++k)
+		{
+			outPoints.push_back({ vertices[2 * k + 0], vertices[2 * k + 1] });
+		}
+
+		for (size_t k = 0; k < elementCount; ++k)
+		{
+			outIndices.push_back(indices[3 * k + 0]);
+			outIndices.push_back(indices[3 * k + 1]);
+			outIndices.push_back(indices[3 * k + 2]);
+		}
+		tessDeleteTess(tess);
 		return true;
 	}
+	tessDeleteTess(tess);
 	return false;
 }
 
@@ -123,28 +137,25 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 		{
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
-			auto r = points[k + 2];
-			auto a1 = points[k + 3];
-			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
-			k += 4;
+			auto a1 = points[k + 2];
+			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, 0, a1.X, a1.Y, false);
+			k += 3;
 		} break;
 		case VGPointType::PieTo:
 		{
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
-			auto r = points[k + 2];
-			auto a1 = points[k + 3];
-			path.pie({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
-			k += 4;
+			auto a1 = points[k + 2];
+			path.pie({ c1.X, c1.Y }, r1.X, r1.Y, 0, a1.X, a1.Y, false);
+			k += 3;
 		} break;
 		case VGPointType::ChordTo:
 		{
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
-			auto r = points[k + 2];
-			auto a1 = points[k + 3];
-			path.chord({ c1.X, c1.Y }, r1.X, r1.Y, r.X, a1.X, a1.Y, false);
-			k += 4;
+			auto a1 = points[k + 2];
+			path.chord({ c1.X, c1.Y }, r1.X, r1.Y, 0, a1.X, a1.Y, false);
+			k += 3;
 		} break;
 		case VGPointType::Close:
 		{
@@ -173,7 +184,7 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 	case VGStrokeJoin::Round: strokeJoin = microtess::stroke_line_join::round; break;
 	default: strokeJoin = microtess::stroke_line_join::bevel; break;
 	}
-	auto& buffers = path.tessellateStroke<>(strokeWidth, strokeCap, strokeJoin, miterLimit, dashControl, dashOffset, false);
+	auto& buffers = path.tessellateStroke<>(strokeWidth, strokeCap, strokeJoin, miterLimit, dashControl, dashOffset, true);
 	auto& vertices = buffers.output_vertices;
 	auto& indices = buffers.output_indices;
 	if (vertices.size() && indices.size())
