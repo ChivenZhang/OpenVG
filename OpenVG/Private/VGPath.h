@@ -97,8 +97,7 @@ public:
 				tessellatedPath.push_back(cmd.p1);
 				break;
 			}
-			currentPoint = cmd.p1; // Update the current point after processing each command
-			currentPoint = cmd.p1; // Update the current point after processing each command
+			currentPoint = tessellatedPath.back();
 		}
 		return tessellatedPath;
 	}

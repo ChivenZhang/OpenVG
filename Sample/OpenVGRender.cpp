@@ -329,9 +329,9 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_NativeRadialBuffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_NativeMatrixBuffer);
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawArrays(GL_TRIANGLES, 0, std::min<size_t>(m_PrimitiveIndex, 3 * OPENVG_MAX_TRIANGLE));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glBindVertexArray(0);
 	glUseProgram(0);

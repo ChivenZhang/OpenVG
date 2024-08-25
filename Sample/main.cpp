@@ -264,22 +264,22 @@ void sample(UIContextRef context, SDL_Window* window)
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("Button0");
+			button->setText("龘齉鱻麤0");
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("Button1");
+			button->setText("龘齉鱻麤1");
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("Button2");
+			button->setText("龘齉鱻麤2");
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("Button3");
+			button->setText("龘齉鱻麤3");
 		}
 	}
 	//if (false)
@@ -290,22 +290,22 @@ void sample(UIContextRef context, SDL_Window* window)
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("Button0");
+			button->setText("龘齉鱻麤0");
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("Button1");
+			button->setText("龘齉鱻麤1");
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("Button2");
+			button->setText("龘齉鱻麤2");
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("Button3");
+			button->setText("龘齉鱻麤3");
 		}
 	}
 	//if (false)
@@ -318,22 +318,22 @@ void sample(UIContextRef context, SDL_Window* window)
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 0, 0, 2, 2);
-			button->setText("Button0");
+			button->setText("龘齉鱻麤0");
 		}
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 0, 2, 3, 1);
-			button->setText("Button1");
+			button->setText("龘齉鱻麤1");
 		}
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 2, 0, 1, 1);
-			button->setText("Button2");
+			button->setText("龘齉鱻麤2");
 		}
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 2, 1, 1, 1);
-			button->setText("Button3");
+			button->setText("龘齉鱻麤3");
 		}
 	}
 	//if (false)
@@ -386,7 +386,7 @@ void sample(UIContextRef context, SDL_Window* window)
 		auto button = UINew<UIButton>();
 		layout->addElement(button);
 		button->setFixedSize(100, 30);
-		button->setText("Button");
+		button->setText("龘齉鱻麤");
 	}
 	//if (false)
 	{

@@ -164,58 +164,6 @@ bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString text, VGVector<VG
 		return filePath;
 		};
 
-	auto unicode_func = [](const VGString& utf8String)->VGVector<uint32_t> {
-		VGVector<uint32_t> unicodeCodepoints;
-		size_t i = 0;
-
-		while (i < utf8String.size()) {
-			uint8_t c = utf8String[i++];
-
-			if (c <= 0x7F) {
-				// 0xxxxxxx  
-				unicodeCodepoints.push_back(c);
-			}
-			else if ((c & 0xE0) == 0xC0) {
-				// 110xxxxx 10xxxxxx  
-				if (i >= utf8String.size()) break;
-				uint8_t c2 = utf8String[i++];
-				unicodeCodepoints.push_back(((c & 0x1F) << 6) | (c2 & 0x3F));
-			}
-			else if ((c & 0xF0) == 0xE0) {
-				// 1110xxxx 10xxxxxx 10xxxxxx  
-				if (i + 1 >= utf8String.size()) break;
-				uint8_t c2 = utf8String[i++];
-				uint8_t c3 = utf8String[i++];
-				unicodeCodepoints.push_back(((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F));
-			}
-			else if ((c & 0xF8) == 0xF0) {
-				// 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx  
-				if (i + 2 >= utf8String.size()) break;
-				uint8_t c2 = utf8String[i++];
-				uint8_t c3 = utf8String[i++];
-				uint8_t c4 = utf8String[i++];
-				uint32_t codepoint = ((c & 0x07) << 18) | ((c2 & 0x3F) << 12) | ((c3 & 0x3F) << 6) | (c4 & 0x3F);
-				// 检查是否是有效的 Unicode 码点（排除代理对和超出范围的码点）  
-				if (codepoint >= 0x10000 && codepoint <= 0x10FFFF) {
-					// 处理 Unicode 辅助平面（surrogate pair）  
-					// 注意：这里简化为只接受辅助平面内的码点，不生成代理对  
-					// 在实际应用中，你可能需要将它们分解为 UTF-16 代理对，或者根据你的需求处理  
-					unicodeCodepoints.push_back(codepoint);
-				}
-				else {
-					// 对于非法的 UTF-8 序列或不在 Unicode 范围内的码点，你可能想记录错误或采取其他措施  
-					// 这里我们简单地忽略它们  
-				}
-			}
-			else {
-				// 无效的 UTF-8 起始字节  
-				// 这里你可以抛出异常、记录错误或采取其他适当的措施  
-				break;
-			}
-		}
-		return unicodeCodepoints;
-		};
-
 	auto fontPath = VGString();
 	if (true)
 	{
@@ -253,7 +201,7 @@ bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString text, VGVector<VG
 		}
 
 		// Step 3: Set the character size
-		FT_Set_Pixel_Sizes(face, 0, 1000);
+		FT_Set_Pixel_Sizes(face, 0, 100);
 
 		// Step 4: Load the character glyph (e.g., 'A')
 
@@ -268,10 +216,11 @@ bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString text, VGVector<VG
 			default: dir = RAQM_DIRECTION_DEFAULT; break;
 			}
 
-			if (raqm_set_text_utf8(rq, text.c_str(), text.length()) &&
-				raqm_set_freetype_face(rq, face) &&
-				raqm_set_par_direction(rq, dir) &&
-				raqm_set_language(rq, "en", 0, text.length()) && raqm_layout(rq))
+			if (raqm_set_text_utf8(rq, text.c_str(), text.length())
+				&& raqm_set_freetype_face(rq, face)
+				&& raqm_set_par_direction(rq, dir)
+				&& raqm_set_language(rq, "en", 0, text.length())
+				&& raqm_layout(rq))
 			{
 				size_t count;
 				raqm_glyph_t* glyphs = raqm_get_glyphs(rq, &count);
@@ -301,9 +250,8 @@ bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString text, VGVector<VG
 						}
 						FT_GlyphSlot slot = face->glyph;
 						FT_Outline& outline = slot->outline;
-						auto advanceX = slot->advance.x;
-						auto height = slot->metrics.height;
-						auto advanceY = slot->metrics.vertBearingY;
+						auto advanceX = slot->metrics.horiAdvance;
+						auto advanceY = slot->metrics.vertAdvance;
 
 						struct VGTextGlygh2
 						{
@@ -370,7 +318,7 @@ bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString text, VGVector<VG
 
 						for (size_t k = 0; k < newPoints.size(); ++k)
 						{
-							newPoints[k].Y = advanceY + height - newPoints[k].Y;
+							newPoints[k].Y = advanceY - newPoints[k].Y;
 						}
 
 						auto value = VGNew<VGTextGlygh>();

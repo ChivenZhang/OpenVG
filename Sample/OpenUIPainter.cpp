@@ -336,14 +336,11 @@ void OpenUIPainter::drawText(float x, float y, float width, float height, const 
 			PRIVATE()->TextFillShape->setText(0, 0, width, height, text);
 		}
 		PRIVATE()->TextFillShape->setRotate(0);
-		PRIVATE()->TextFillShape->setTranslate(0, 0);
-		PRIVATE()->TextFillShape->setScale(getFont().Size * 0.01f, getFont().Size * 0.01f);
+		PRIVATE()->TextFillShape->setTranslate(x, y);
+		//PRIVATE()->TextFillShape->setScale(getFont().Size * 0.01f, getFont().Size * 0.01f);
+		PRIVATE()->TextFillShape->setScale(25 * 0.01f, 25 * 0.01f);
 		PRIVATE()->TextFillShape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
 		PRIVATE()->Context->fillElement(PRIVATE()->TextFillShape);
-
-		/*auto shape = PRIVATE()->TextFillShape;
-		shape->setLineWidth(4);
-		PRIVATE()->Context->strokeElement(shape);*/
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
