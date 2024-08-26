@@ -332,7 +332,7 @@ void OpenUIPainter::drawText(float x, float y, float width, float height, const 
 		if (PRIVATE()->TextFillShape == nullptr)
 		{
 			PRIVATE()->TextFillShape = VGNew<VGText>();
-			PRIVATE()->TextFillShape->setFamily(getFont().Family);
+			PRIVATE()->TextFillShape->setFamily("NSimSun");
 			PRIVATE()->TextFillShape->setText(0, 0, width, height, text);
 		}
 		PRIVATE()->TextFillShape->setRotate(0);
