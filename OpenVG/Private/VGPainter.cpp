@@ -1,5 +1,6 @@
 #include "../VGPainter.h"
 #include "VGTessellate.h"
+#include "VGTrueType.h"
 
 class VGPainterPrivateData : public VGPainterPrivate
 {
@@ -33,18 +34,15 @@ void VGPainter::clip(VGElementRaw element)
 			auto& primitives = cache->Primitive;
 			for (size_t i = 0; i + 3 <= indies.size(); i += 3)
 			{
-				auto index0 = indies[i + 0];
-				auto index1 = indies[i + 1];
-				auto index2 = indies[i + 2];
-				auto point0 = points[index0];
-				auto point1 = points[index1];
-				auto point2 = points[index2];
+				auto point0 = points[indies[i + 0]];
+				auto point1 = points[indies[i + 1]];
+				auto point2 = points[indies[i + 2]];
 				auto& primitive0 = primitives.emplace_back();
-				primitive0 = { point0.X, point0.Y, -1, -1, 0, };
+				primitive0.X = point0.X; primitive0.Y = point0.Y; primitive0.Matrix = 0;
 				auto& primitive1 = primitives.emplace_back();
-				primitive1 = { point1.X, point1.Y, -1, -1, 0, };
+				primitive1.X = point1.X; primitive1.Y = point1.Y; primitive1.Matrix = 0;
 				auto& primitive2 = primitives.emplace_back();
-				primitive2 = { point2.X, point2.Y, -1, -1, 0, };
+				primitive2.X = point2.X; primitive2.Y = point2.Y; primitive2.Matrix = 0;
 			}
 		}
 		element->setClipCache(cache);
@@ -80,15 +78,15 @@ void VGPainter::fill(VGElementRaw element)
 			auto& primitives = cache->Primitive;
 			for (size_t i = 0; i + 3 <= indies.size(); i += 3)
 			{
-				auto index0 = indies[i + 0];
-				auto index1 = indies[i + 1];
-				auto index2 = indies[i + 2];
-				auto point0 = points[index0];
-				auto point1 = points[index1];
-				auto point2 = points[index2];
-				primitives.emplace_back(VGPrimitive::primitive_t{ point0.X, point0.Y, -1, -1, 0, });
-				primitives.emplace_back(VGPrimitive::primitive_t{ point1.X, point1.Y, -1, -1, 0, });
-				primitives.emplace_back(VGPrimitive::primitive_t{ point2.X, point2.Y, -1, -1, 0, });
+				auto point0 = points[indies[i + 0]];
+				auto point1 = points[indies[i + 1]];
+				auto point2 = points[indies[i + 2]];
+				auto& primitive0 = primitives.emplace_back();
+				primitive0.X = point0.X; primitive0.Y = point0.Y; primitive0.Matrix = 0;
+				auto& primitive1 = primitives.emplace_back();
+				primitive1.X = point1.X; primitive1.Y = point1.Y; primitive1.Matrix = 0;
+				auto& primitive2 = primitives.emplace_back();
+				primitive2.X = point2.X; primitive2.Y = point2.Y; primitive2.Matrix = 0;
 			}
 		}
 		element->setFillCache(cache);
@@ -183,18 +181,15 @@ void VGPainter::stroke(VGElementRaw element)
 			auto& primitives = cache->Primitive;
 			for (size_t i = 0; i + 3 <= indies.size(); i += 3)
 			{
-				auto index0 = indies[i + 0];
-				auto index1 = indies[i + 1];
-				auto index2 = indies[i + 2];
-				auto point0 = points[index0];
-				auto point1 = points[index1];
-				auto point2 = points[index2];
+				auto point0 = points[indies[i + 0]];
+				auto point1 = points[indies[i + 1]];
+				auto point2 = points[indies[i + 2]];
 				auto& primitive0 = primitives.emplace_back();
-				primitive0 = { point0.X, point0.Y, -1, -1, 0, };
+				primitive0.X = point0.X; primitive0.Y = point0.Y; primitive0.Matrix = 0;
 				auto& primitive1 = primitives.emplace_back();
-				primitive1 = { point1.X, point1.Y, -1, -1, 0, };
+				primitive1.X = point1.X; primitive1.Y = point1.Y; primitive1.Matrix = 0;
 				auto& primitive2 = primitives.emplace_back();
-				primitive2 = { point2.X, point2.Y, -1, -1, 0, };
+				primitive2.X = point2.X; primitive2.Y = point2.Y; primitive2.Matrix = 0;
 			}
 		}
 		element->setStrokeCache(cache);

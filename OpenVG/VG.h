@@ -113,6 +113,7 @@
 #include <bitset>
 #include <exception>
 #include <functional>
+#define VGNAN (NAN)
 
 // ============================================
 
@@ -521,6 +522,7 @@ struct VGPrimitive
 	struct primitive_t
 	{
 		float X = 0, Y = 0;
+		float U = FLT_MAX, V = FLT_MAX;
 		int32_t Fill = -1, Stroke = -1;
 		int32_t Matrix = -1, _Unused = -1;
 	};

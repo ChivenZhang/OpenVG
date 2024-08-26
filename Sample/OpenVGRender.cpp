@@ -41,9 +41,9 @@ OpenVGRender::OpenVGRender()
 		};
 		struct primitive_t
 		{
-			float X, Y;
+			float X, Y, U, V;
 			int Fill, Stroke;
-			int Matrix, Unused;
+			int Matrix, Flags;
 		};
 
 		layout(std430, binding=0) buffer FILL_STYLE_BLOCK
@@ -79,11 +79,14 @@ OpenVGRender::OpenVGRender()
 	auto vsource = VGString(R"(
 		#version 450
 		layout (location = 0) in vec2 _point;
-		layout (location = 1) in ivec2 _style;
-		layout (location = 2) in ivec2 _matrix;
+		layout (location = 1) in vec2 _uv;
+		layout (location = 2) in ivec2 _style;
+		layout (location = 3) in ivec2 _matrix;
 		out vec2 uv;
 		flat out int fill;
 		flat out int stroke;
+		#define FLT_MAX          3.402823466e+38F
+
 		)") + common + R"(
 		void main()
 		{
@@ -91,7 +94,10 @@ OpenVGRender::OpenVGRender()
 			stroke = _style.y;
 			mat3 matrix = MatrixList[_matrix.x];
 			vec2 vertex = vec2(matrix * vec3(_point, 1.0)) * Viewport;
-			uv = vec2(vertex.x, 1.0-vertex.y);
+			if(_uv.x == FLT_MAX) uv.x = vertex.x;
+			else uv.x = _uv.x;
+			if(_uv.y == FLT_MAX) uv.y = 1.0-vertex.y;
+			else uv.y = _uv.y;
 			gl_Position = vec4(2 * vertex - 1, 0.0, 1.0);
 		}
 	)";
@@ -178,10 +184,12 @@ OpenVGRender::OpenVGRender()
 	// 4. 设置顶点属性指针 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, X));
 	glEnableVertexAttribArray(0);
-	glVertexAttribIPointer(1, 2, GL_INT, sizeof(primitive_t), (void*)offsetof(primitive_t, Fill));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, U));
 	glEnableVertexAttribArray(1);
-	glVertexAttribIPointer(2, 2, GL_INT, sizeof(primitive_t), (void*)offsetof(primitive_t, Matrix));
+	glVertexAttribIPointer(2, 2, GL_INT, sizeof(primitive_t), (void*)offsetof(primitive_t, Fill));
 	glEnableVertexAttribArray(2);
+	glVertexAttribIPointer(3, 2, GL_INT, sizeof(primitive_t), (void*)offsetof(primitive_t, Matrix));
+	glEnableVertexAttribArray(3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
