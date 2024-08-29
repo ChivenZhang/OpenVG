@@ -129,7 +129,7 @@ void VGText::setEllipsize(VGTextEllipsize value)
 
 void VGText::setText(float x, float y, float width, float height, VGString text)
 {
-	VGVector<VGPoint> points;
+	/*VGVector<VGPoint> points;
 	VGVector<VGPointType> types;
 	if (VGTrueType::Path(this, { x,y,width,height }, text, points, types) && points.size() && types.size())
 	{
@@ -144,5 +144,5 @@ void VGText::setText(float x, float y, float width, float height, VGString text)
 			case VGPointType::Close: close(); break;
 			}
 		}
-	}
+	}*/
 }

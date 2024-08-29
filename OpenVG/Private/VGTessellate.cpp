@@ -6,10 +6,10 @@
 #include <micro-tess/dynamic_array.h>
 #include <micro-tess/std_rebind_allocator.h>
 
-bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndices)
+bool VGTessellate::Fill(VGShapeRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndices)
 {
 	auto points = element->getPointList();
-	auto types = element->getPointTypeList();
+	auto types = element->getTypeList();
 
 	VGPath path;
 	for (size_t i = 0, k = 0; i < types.size(); ++i)
@@ -99,10 +99,10 @@ bool VGTessellate::Fill(VGElementRaw element, VGVector<point_t>& outPoints, VGVe
 	return false;
 }
 
-bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndices)
+bool VGTessellate::Stroke(VGShapeRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndices)
 {
 	auto points = element->getPointList();
-	auto types = element->getPointTypeList();
+	auto types = element->getTypeList();
 	microtess::path<float, dynamic_array, microtess::std_rebind_allocator<>> path{};
 	for (size_t i = 0, k = 0; i < types.size(); ++i)
 	{
@@ -169,7 +169,7 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 	auto dashOffset = (int32_t)element->getDashOffset();
 	auto dashControl = element->getLineDash();
 	auto strokeCap = microtess::stroke_cap::butt;
-	switch (element->getStrokeStyle()->LineCap)
+	switch (element->getLineCap())
 	{
 	case VGStrokeCap::Butt: strokeCap = microtess::stroke_cap::butt; break;
 	case VGStrokeCap::Round: strokeCap = microtess::stroke_cap::round; break;
@@ -177,7 +177,7 @@ bool VGTessellate::Stroke(VGElementRaw element, VGVector<point_t>& outPoints, VG
 	default: strokeCap = microtess::stroke_cap::butt; break;
 	}
 	auto strokeJoin = microtess::stroke_line_join::bevel;
-	switch (element->getStrokeStyle()->LineJoin)
+	switch (element->getLineJoin())
 	{
 	case VGStrokeJoin::Bevel: strokeJoin = microtess::stroke_line_join::bevel; break;
 	case VGStrokeJoin::Miter: strokeJoin = microtess::stroke_line_join::miter; break;

@@ -8,6 +8,48 @@ public:
 	VGShape();
 	~VGShape();
 
+	VGColor getFillColor() const;
+	void setFillColor(VGColor value);
+
+	VGColor getStrokeColor() const;
+	void setStrokeColor(VGColor value);
+
+	float getLineWidth() const;
+	void setLineWidth(float value);
+
+	float getMiterLimit() const;
+	void setMiterLimit(float value);
+
+	VGStrokeCap getLineCap() const;
+	void setLineCap(VGStrokeCap value);
+
+	VGStrokeJoin getLineJoin() const;
+	void setLineJoin(VGStrokeJoin value);
+
+	float getDashOffset() const;
+	VGArrayView<const float> getLineDash() const;
+	void setLineDash(VGVector<float> value, float offset = 0);
+
+	VGArrayView<const VGPoint> getPointList() const;
+	VGArrayView<const VGPointType> getTypeList() const;
+
+	void moveTo(float x, float y);
+	void moveTo(VGPoint p) { moveTo(p.X, p.Y); }
+	void lineTo(float x, float y);
+	void lineTo(VGPoint p) { lineTo(p.X, p.Y); }
+	void curveTo(float cx1, float cy1, float x, float y);
+	void curveTo(VGPoint p1, VGPoint p2) { curveTo(p1.X, p1.Y, p2.X, p2.Y); }
+	void cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float y);
+	void cubicTo(VGPoint p1, VGPoint p2, VGPoint p3) { cubicTo(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y); }
+	void arcTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2);
+	void arcTo(VGPoint p, float rx, float ry, float r, float a1, float a2) { arcTo(p.X, p.Y, rx, ry, r, a1, a2); }
+	void pieTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2);
+	void pieTo(VGPoint p, float rx, float ry, float r, float a1, float a2) { pieTo(p.X, p.Y, rx, ry, r, a1, a2); }
+	void chordTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2);
+	void chordTo(VGPoint p, float rx, float ry, float r, float a1, float a2) { chordTo(p.X, p.Y, rx, ry, r, a1, a2); }
+	void close();
+	void reset();
+
 	void arc(float x, float y, float width, float height, float startAngle, float spanAngle);
 	void pie(float x, float y, float width, float height, float startAngle, float spanAngle);
 	void chord(float x, float y, float width, float height, float startAngle, float spanAngle);
@@ -59,6 +101,11 @@ public:
 	{
 		line(x1, y1, x2, y2);
 	}
+
+protected:
+	virtual void clip() override;
+	virtual void fill() override;
+	virtual void stroke() override;
 
 private:
 	VGElementPrivateRaw m_Private;

@@ -511,31 +511,24 @@ enum class VGStrokeJoin : uint8_t
 	Bevel,		///< The outer corner of the joined path segments is bevelled at the join point. The triangular region of the corner is enclosed by a straight line between the outer corners of each stroke.
 };
 
-#define VG_FILL_FLAGS_LINEAR 0x0001
-#define VG_FILL_FLAGS_RADIAL 0x0002
-#define VG_STROKE_FLAGS_LINEAR 0x0001
-#define VG_STROKE_FLAGS_RADIAL 0x0002
+#define VG_FLAGS_FILL_STROKE 0x0001
+#define VG_FLAGS_COLOR_IMAGE 0x0002
+#define VG_FLAGS_STYLE_LINEAR 0x0004
+#define VG_FLAGS_STYLE_RADIAL 0x0008
+
 struct VGPrimitive
 {
 	static constexpr int MAX_STOP_COUNT = 16;
-	struct primitive_t
+	struct point_t
 	{
 		float X = 0, Y = 0;
-		int32_t Fill = -1, Stroke = -1;
-		int32_t Matrix = -1, _Unused = -1;
+		float U = 0, V = 0;
+		int32_t Style = -1, Matrix = -1;
 	};
-	struct fill_t
+	struct style_t
 	{
 		VGColor Color;
-		int32_t Flags = -1;
-		int32_t Image = -1;
-		int32_t Linear = -1;
-		int32_t Radial = -1;
-	};
-	struct stroke_t
-	{
-		VGColor Color;
-		int32_t Flags = -1;
+		int32_t Flags = 0; // [fill|stroke, linear|radial, color|image, absolute|relative uv]
 		int32_t Image = -1;
 		int32_t Linear = -1;
 		int32_t Radial = -1;
@@ -559,16 +552,15 @@ struct VGPrimitive
 	using image_t = VGImage;
 	using matrix_t = VGFloat3x3;
 
+	VGVector<point_t> PointList;
+	VGVector<style_t> StyleList;
 	VGVector<image_t> ImageList;
-	VGVector<fill_t> FillStyle;
-	VGVector<stroke_t> StrokeStyle;
-	VGVector<primitive_t> Primitive;
-	VGVector<linear_t> LinearGradient;
-	VGVector<radial_t> RadialGradient;
+	VGVector<linear_t> LinearList;
+	VGVector<radial_t> RadialList;
 	VGVector<matrix_t> MatrixList;
 };
-using VGPrimitiveRef = VGRef<VGPrimitive>;
 using VGPrimitiveRaw = VGRaw<VGPrimitive>;
+using VGPrimitiveRef = VGRef<VGPrimitive>;
 
 enum VGTextStyle
 {
