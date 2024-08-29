@@ -8,7 +8,7 @@ public:
 	uint32_t Spacing = 0;
 	uint32_t LineSpacing = 0;
 	bool LineWrap = false;
-	VGString Family = "sans-serif";
+	VGString Family = "NSimSun";
 	VGTextStyle Style = VGTextStyle::StyleNormal;
 	VGTextWeight Weight = VGTextWeight::WeightNormal;
 	VGTextAlgins Aligns = VGTextAlgin::AlignLeft | VGTextAlgin::AlignTop;

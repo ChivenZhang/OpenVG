@@ -113,6 +113,7 @@
 #include <bitset>
 #include <exception>
 #include <functional>
+#define VGNAN (NAN)
 
 // ============================================
 

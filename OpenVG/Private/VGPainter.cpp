@@ -1,5 +1,6 @@
 #include "../VGPainter.h"
 #include "VGTessellate.h"
+#include "VGTrueType.h"
 
 class VGPainterPrivateData : public VGPainterPrivate
 {
