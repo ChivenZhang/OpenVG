@@ -40,6 +40,11 @@ public:
 
 	void setText(float x, float y, float width, float height, VGString text);
 
+protected:
+	virtual void clip() override;
+	virtual void fill() override;
+	virtual void stroke() override;
+
 private:
 	VGElementPrivateRaw m_Private;
 };

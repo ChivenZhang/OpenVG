@@ -146,3 +146,15 @@ void VGText::setText(float x, float y, float width, float height, VGString text)
 		}
 	}*/
 }
+
+void VGText::clip()
+{
+}
+
+void VGText::fill()
+{
+}
+
+void VGText::stroke()
+{
+}
