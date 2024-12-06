@@ -1,7 +1,7 @@
 #include "VGShape.h"
 #include "VGTessellate.h"
 
-class VGShapePrivateData : public VGElementPrivate
+class VGShapePrivate : public VGElementPrivate
 {
 public:
 	VGFillStyleRef FillStyle;
@@ -9,11 +9,11 @@ public:
 	VGVector<VGPoint> PointList;
 	VGVector<VGPointType> PointTypeList;
 };
-#define PRIVATE() ((VGShapePrivateData*) m_Private)
+#define PRIVATE() ((VGShapePrivate*) m_Private)
 
 VGShape::VGShape()
 {
-	m_Private = new VGShapePrivateData;
+	m_Private = new VGShapePrivate;
 }
 
 VGShape::~VGShape()
@@ -161,36 +161,36 @@ void VGShape::cubicTo(float cx1, float cy1, float cx2, float cy2, float x, float
 	PRIVATE()->PointTypeList.push_back(VGPointType::CubicTo);
 }
 
-void VGShape::arcTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2)
+void VGShape::arcTo(float cx1, float cy1, float rx, float ry, float a1, float a2)
 {
 	setClipCache(nullptr);
 	setFillCache(nullptr);
 	setStrokeCache(nullptr);
 	PRIVATE()->PointList.push_back({ cx1, cy1 });
 	PRIVATE()->PointList.push_back({ rx, ry });
-	PRIVATE()->PointList.push_back({ VGDeg2Rad(a1), VGDeg2Rad(a2) });
+	PRIVATE()->PointList.push_back({ a1, a2 });
 	PRIVATE()->PointTypeList.push_back(VGPointType::ArcTo);
 }
 
-void VGShape::pieTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2)
+void VGShape::pieTo(float cx1, float cy1, float rx, float ry, float a1, float a2)
 {
 	setClipCache(nullptr);
 	setFillCache(nullptr);
 	setStrokeCache(nullptr);
 	PRIVATE()->PointList.push_back({ cx1, cy1 });
 	PRIVATE()->PointList.push_back({ rx, ry });
-	PRIVATE()->PointList.push_back({ VGDeg2Rad(a1), VGDeg2Rad(a2) });
+	PRIVATE()->PointList.push_back({ a1, a2 });
 	PRIVATE()->PointTypeList.push_back(VGPointType::PieTo);
 }
 
-void VGShape::chordTo(float cx1, float cy1, float rx, float ry, float r, float a1, float a2)
+void VGShape::chordTo(float cx1, float cy1, float rx, float ry, float a1, float a2)
 {
 	setClipCache(nullptr);
 	setFillCache(nullptr);
 	setStrokeCache(nullptr);
 	PRIVATE()->PointList.push_back({ cx1, cy1 });
 	PRIVATE()->PointList.push_back({ rx, ry });
-	PRIVATE()->PointList.push_back({ VGDeg2Rad(a1), VGDeg2Rad(a2) });
+	PRIVATE()->PointList.push_back({ a1, a2 });
 	PRIVATE()->PointTypeList.push_back(VGPointType::ChordTo);
 }
 
@@ -206,33 +206,33 @@ void VGShape::close()
 
 void VGShape::reset()
 {
-	PRIVATE()->FillStyle = nullptr;
-	PRIVATE()->StrokeStyle = nullptr;
 	setClipCache(nullptr);
 	setFillCache(nullptr);
 	setStrokeCache(nullptr);
+	PRIVATE()->FillStyle = nullptr;
+	PRIVATE()->StrokeStyle = nullptr;
 	PRIVATE()->PointList.clear();
 	PRIVATE()->PointTypeList.clear();
 }
 
 void VGShape::arc(float x, float y, float width, float height, float startAngle, float spanAngle)
 {
-	arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, startAngle, spanAngle);
+	arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, startAngle, spanAngle);
 }
 
 void VGShape::pie(float x, float y, float width, float height, float startAngle, float spanAngle)
 {
-	pieTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, startAngle, spanAngle);
+	pieTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, startAngle, spanAngle);
 }
 
 void VGShape::chord(float x, float y, float width, float height, float startAngle, float spanAngle)
 {
-	chordTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, startAngle, spanAngle);
+	chordTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, startAngle, spanAngle);
 }
 
 void VGShape::ellipse(float x, float y, float width, float height)
 {
-	arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 0, 360);
+	arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 360);
 }
 
 void VGShape::rect(float x, float y, float width, float height, float roundX, float roundY)
@@ -259,21 +259,7 @@ void VGShape::clip()
 	if (getClipCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
-		VGVector<VGTessellate::point_t> _points;
-		VGVector<VGTessellate::index_t> _indies;
-		if (VGTessellate::Fill(this, _points, _indies))
-		{
-			auto& points = cache->PointList;
-			for (size_t i = 0; i + 3 <= _indies.size(); i += 3)
-			{
-				auto point0 = _points[_indies[i + 0]];
-				auto point1 = _points[_indies[i + 1]];
-				auto point2 = _points[_indies[i + 2]];
-				points.emplace_back(VGPrimitive::point_t{ point0.X, point0.Y, -1, -1, 0, 0, });
-				points.emplace_back(VGPrimitive::point_t{ point1.X, point1.Y, -1, -1, 0, 0, });
-				points.emplace_back(VGPrimitive::point_t{ point2.X, point2.Y, -1, -1, 0, 0, });
-			}
-		}
+		VGTessellate::Fill(this, cache.get());
 		setClipCache(cache);
 	}
 }
@@ -286,88 +272,82 @@ void VGShape::fill()
 	if (getFillCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
-		VGVector<VGTessellate::point_t> _points;
-		VGVector<VGTessellate::index_t> _indies;
-		if (VGTessellate::Fill(this, _points, _indies))
+		VGTessellate::Fill(this, cache.get());
+		setFillCache(cache);
+	}
+
+	auto cache = getFillCache();
+	auto& points = cache->PointList;
+	auto& styles = cache->StyleList; styles.clear();
+	auto& images = cache->ImageList; images.clear();
+	auto& linears = cache->LinearList; linears.clear();
+	auto& radials = cache->RadialList; radials.clear();
+	auto& matrixs = cache->MatrixList; matrixs.clear();
+	auto& scissors = cache->ScissorList; scissors.clear();
+
+	auto _style = PRIVATE()->FillStyle;
+	auto& style = styles.emplace_back();
+	auto& matrix = matrixs.emplace_back();
+	matrix.Scissor = getScissor();
+	matrix.Transform = VGFloat3x3::Transform(getTranslate().X, getTranslate().Y, getRotate(), getScale().X, getScale().Y);
+
+	if (_style) style.Color = _style->Color;
+	if (_style && _style->Image.Pixel)
+	{
+		style.Image = (int32_t)images.size();
+		style.Flags |= (VG_FLAGS_IMAGE_COLOR);
+		if (_style->Image.Type == VGImage::HWByte || _style->Image.Type == VGImage::HWFloat) style.Flags |= (VG_FLAGS_IMAGE_HWGPU);
+
+		images.emplace_back(_style->Image);
+	}
+	if (_style && VGCast<VGLinearGradient>(_style->Gradient))
+	{
+		style.Flags |= (VG_FLAGS_STYLE_LINEAR);
+		style.Linear = (int32_t)linears.size();
+
+		auto gradient = VGCast<VGLinearGradient>(_style->Gradient).get();
+		auto& linear = linears.emplace_back();
+		auto stops = gradient->getColorStop();
+		if (stops.size())
 		{
-			auto& points = cache->PointList;
-			auto& styles = cache->StyleList;
-			auto& images = cache->ImageList;
-			auto& linears = cache->LinearList;
-			auto& radials = cache->RadialList;
-			auto& matrixs = cache->MatrixList;
-			for (size_t i = 0; i + 3 <= _indies.size(); i += 3)
+			linear.GradStartPos.X = gradient->getStartPos().X;
+			linear.GradStartPos.Y = gradient->getStartPos().Y;
+			linear.GradEndPos.X = gradient->getEndPos().X;
+			linear.GradEndPos.Y = gradient->getEndPos().Y;
+			linear.NumStops.X = (uint32_t)stops.size();
+			for (size_t i = 0; i < stops.size(); ++i)
 			{
-				auto point0 = _points[_indies[i + 0]];
-				auto point1 = _points[_indies[i + 1]];
-				auto point2 = _points[_indies[i + 2]];
-				points.emplace_back(VGPrimitive::point_t{ point0.X, point0.Y, -1, -1, 0, 0, });
-				points.emplace_back(VGPrimitive::point_t{ point1.X, point1.Y, -1, -1, 0, 0, });
-				points.emplace_back(VGPrimitive::point_t{ point2.X, point2.Y, -1, -1, 0, 0, });
-			}
-
-			auto _style = PRIVATE()->FillStyle;
-			auto& style = styles.emplace_back();
-
-			auto& matrix = matrixs.emplace_back();
-			matrix = VGFloat3x3::Transform(getTranslate().X, getTranslate().Y, getRotate(), getScale().X, getScale().Y);
-
-			if (_style) style.Color = _style->Color;
-			if (_style && _style->Image.Data.size())
-			{
-				style.Image = 0;
-				style.Flags |= (VG_FLAGS_COLOR_IMAGE);
-				images.emplace_back(_style->Image);
-			}
-			if (_style && VGCast<VGLinearGradient>(_style->Gradient))
-			{
-				style.Flags |= (VG_FLAGS_STYLE_LINEAR);
-
-				auto gradient = VGCast<VGLinearGradient>(_style->Gradient).get();
-				auto& linear = linears.emplace_back();
-				auto stops = gradient->getColorStop();
-				if (stops.size())
-				{
-					linear.GradStartPos.X = gradient->getStartPos().X;
-					linear.GradStartPos.Y = gradient->getStartPos().Y;
-					linear.GradEndPos.X = gradient->getEndPos().X;
-					linear.GradEndPos.Y = gradient->getEndPos().Y;
-					linear.NumStops.X = (uint32_t)stops.size();
-					for (size_t i = 0; i < stops.size(); ++i)
-					{
-						linear.StopColors[i].R = stops[i].R;
-						linear.StopColors[i].G = stops[i].G;
-						linear.StopColors[i].B = stops[i].B;
-						linear.StopColors[i].A = stops[i].A;
-						linear.StopPoints[i].X = stops[i].Offset;
-					}
-				}
-			}
-			if (_style && VGCast<VGRadialGradient>(_style->Gradient))
-			{
-				style.Flags |= (VG_FLAGS_STYLE_RADIAL);
-
-				auto gradient = VGCast<VGRadialGradient>(_style->Gradient).get();
-				auto& radial = radials.emplace_back();
-				auto stops = gradient->getColorStop();
-				if (stops.size())
-				{
-					radial.Radius.X = gradient->getRadius();
-					radial.CenterPos.X = gradient->getCenterPos().X;
-					radial.CenterPos.Y = gradient->getCenterPos().Y;
-					radial.NumStops.X = (uint32_t)stops.size();
-					for (size_t i = 0; i < stops.size(); ++i)
-					{
-						radial.StopColors[i].R = stops[i].R;
-						radial.StopColors[i].G = stops[i].G;
-						radial.StopColors[i].B = stops[i].B;
-						radial.StopColors[i].A = stops[i].A;
-						radial.StopPoints[i].X = stops[i].Offset;
-					}
-				}
+				linear.StopColors[i].R = stops[i].R;
+				linear.StopColors[i].G = stops[i].G;
+				linear.StopColors[i].B = stops[i].B;
+				linear.StopColors[i].A = stops[i].A;
+				linear.StopPoints[i].X = stops[i].Offset;
 			}
 		}
-		setFillCache(cache);
+	}
+	if (_style && VGCast<VGRadialGradient>(_style->Gradient))
+	{
+		style.Flags |= (VG_FLAGS_STYLE_RADIAL);
+		style.Radial = (int32_t)radials.size();
+
+		auto gradient = VGCast<VGRadialGradient>(_style->Gradient).get();
+		auto& radial = radials.emplace_back();
+		auto stops = gradient->getColorStop();
+		if (stops.size())
+		{
+			radial.Radius.X = gradient->getRadius();
+			radial.CenterPos.X = gradient->getCenterPos().X;
+			radial.CenterPos.Y = gradient->getCenterPos().Y;
+			radial.NumStops.X = (uint32_t)stops.size();
+			for (size_t i = 0; i < stops.size(); ++i)
+			{
+				radial.StopColors[i].R = stops[i].R;
+				radial.StopColors[i].G = stops[i].G;
+				radial.StopColors[i].B = stops[i].B;
+				radial.StopColors[i].A = stops[i].A;
+				radial.StopPoints[i].X = stops[i].Offset;
+			}
+		}
 	}
 }
 
@@ -379,89 +359,81 @@ void VGShape::stroke()
 	if (getStrokeCache() == nullptr)
 	{
 		auto cache = VGNew<VGPrimitive>();
-		VGVector<VGTessellate::point_t> _points;
-		VGVector<VGTessellate::index_t> _indies;
-		if (VGTessellate::Stroke(this, _points, _indies))
+		VGTessellate::Stroke(this, cache.get());
+		setStrokeCache(cache);
+	}
+
+	auto cache = getStrokeCache();
+	auto& points = cache->PointList;
+	auto& styles = cache->StyleList; styles.clear();
+	auto& images = cache->ImageList; images.clear();
+	auto& linears = cache->LinearList; linears.clear();
+	auto& radials = cache->RadialList; radials.clear();
+	auto& matrixs = cache->MatrixList; matrixs.clear();
+	auto& scissors = cache->ScissorList; scissors.clear();
+
+	auto _style = PRIVATE()->StrokeStyle;
+	auto& style = styles.emplace_back();
+	auto& matrix = matrixs.emplace_back();
+	matrix.Scissor = getScissor();
+	matrix.Transform = VGFloat3x3::Transform(getTranslate().X, getTranslate().Y, getRotate(), getScale().X, getScale().Y);
+
+	if (_style) style.Color = _style->Color;
+	if (_style && _style->Image.Pixel)
+	{
+		style.Image = (int32_t)images.size();
+		style.Flags |= (VG_FLAGS_IMAGE_COLOR);
+		if (_style->Image.Type == VGImage::HWByte || _style->Image.Type == VGImage::HWFloat) style.Flags |= (VG_FLAGS_IMAGE_HWGPU);
+
+		images.emplace_back(_style->Image);
+	}
+	if (_style && VGCast<VGLinearGradient>(_style->Gradient))
+	{
+		style.Flags |= (VG_FLAGS_STYLE_LINEAR);
+		style.Linear = (int32_t)linears.size();
+
+		auto gradient = VGCast<VGLinearGradient>(_style->Gradient).get();
+		auto& linear = linears.emplace_back();
+		auto stops = gradient->getColorStop();
+		if (stops.size())
 		{
-			auto& points = cache->PointList;
-			auto& styles = cache->StyleList;
-			auto& images = cache->ImageList;
-			auto& linears = cache->LinearList;
-			auto& radials = cache->RadialList;
-			auto& matrixs = cache->MatrixList;
-			for (size_t i = 0; i + 3 <= _indies.size(); i += 3)
+			linear.GradStartPos.X = gradient->getStartPos().X;
+			linear.GradStartPos.Y = gradient->getStartPos().Y;
+			linear.GradEndPos.X = gradient->getEndPos().X;
+			linear.GradEndPos.Y = gradient->getEndPos().Y;
+			linear.NumStops.X = (uint32_t)stops.size();
+			for (size_t i = 0; i < stops.size(); ++i)
 			{
-				auto point0 = _points[_indies[i + 0]];
-				auto point1 = _points[_indies[i + 1]];
-				auto point2 = _points[_indies[i + 2]];
-				points.emplace_back(VGPrimitive::point_t{ point0.X, point0.Y, -1, -1, 0, 0, });
-				points.emplace_back(VGPrimitive::point_t{ point1.X, point1.Y, -1, -1, 0, 0, });
-				points.emplace_back(VGPrimitive::point_t{ point2.X, point2.Y, -1, -1, 0, 0, });
-			}
-
-			auto _style = PRIVATE()->StrokeStyle;
-			auto& style = styles.emplace_back();
-
-			auto& matrix = matrixs.emplace_back();
-			matrix = VGFloat3x3::Transform(getTranslate().X, getTranslate().Y, getRotate(), getScale().X, getScale().Y);
-
-			style.Flags |= (VG_FLAGS_FILL_STROKE);
-
-			if (_style) style.Color = _style->Color;
-			if (_style && _style->Image.Data.size())
-			{
-				style.Image = 0;
-				style.Flags |= (VG_FLAGS_COLOR_IMAGE);
-				images.emplace_back(_style->Image);
-			}
-			if (_style && VGCast<VGLinearGradient>(_style->Gradient))
-			{
-				style.Flags |= (VG_FLAGS_STYLE_LINEAR);
-
-				auto gradient = VGCast<VGLinearGradient>(_style->Gradient).get();
-				auto& linear = linears.emplace_back();
-				auto stops = gradient->getColorStop();
-				if (stops.size())
-				{
-					linear.GradStartPos.X = gradient->getStartPos().X;
-					linear.GradStartPos.Y = gradient->getStartPos().Y;
-					linear.GradEndPos.X = gradient->getEndPos().X;
-					linear.GradEndPos.Y = gradient->getEndPos().Y;
-					linear.NumStops.X = (uint32_t)stops.size();
-					for (size_t i = 0; i < stops.size(); ++i)
-					{
-						linear.StopColors[i].R = stops[i].R;
-						linear.StopColors[i].G = stops[i].G;
-						linear.StopColors[i].B = stops[i].B;
-						linear.StopColors[i].A = stops[i].A;
-						linear.StopPoints[i].X = stops[i].Offset;
-					}
-				}
-			}
-			if (_style && VGCast<VGRadialGradient>(_style->Gradient))
-			{
-				style.Flags |= (VG_FLAGS_STYLE_RADIAL);
-
-				auto gradient = VGCast<VGRadialGradient>(_style->Gradient).get();
-				auto& radial = radials.emplace_back();
-				auto stops = gradient->getColorStop();
-				if (stops.size())
-				{
-					radial.Radius.X = gradient->getRadius();
-					radial.CenterPos.X = gradient->getCenterPos().X;
-					radial.CenterPos.Y = gradient->getCenterPos().Y;
-					radial.NumStops.X = (uint32_t)stops.size();
-					for (size_t i = 0; i < stops.size(); ++i)
-					{
-						radial.StopColors[i].R = stops[i].R;
-						radial.StopColors[i].G = stops[i].G;
-						radial.StopColors[i].B = stops[i].B;
-						radial.StopColors[i].A = stops[i].A;
-						radial.StopPoints[i].X = stops[i].Offset;
-					}
-				}
+				linear.StopColors[i].R = stops[i].R;
+				linear.StopColors[i].G = stops[i].G;
+				linear.StopColors[i].B = stops[i].B;
+				linear.StopColors[i].A = stops[i].A;
+				linear.StopPoints[i].X = stops[i].Offset;
 			}
 		}
-		setStrokeCache(cache);
+	}
+	if (_style && VGCast<VGRadialGradient>(_style->Gradient))
+	{
+		style.Flags |= (VG_FLAGS_STYLE_RADIAL);
+		style.Radial = (int32_t)radials.size();
+
+		auto gradient = VGCast<VGRadialGradient>(_style->Gradient).get();
+		auto& radial = radials.emplace_back();
+		auto stops = gradient->getColorStop();
+		if (stops.size())
+		{
+			radial.Radius.X = gradient->getRadius();
+			radial.CenterPos.X = gradient->getCenterPos().X;
+			radial.CenterPos.Y = gradient->getCenterPos().Y;
+			radial.NumStops.X = (uint32_t)stops.size();
+			for (size_t i = 0; i < stops.size(); ++i)
+			{
+				radial.StopColors[i].R = stops[i].R;
+				radial.StopColors[i].G = stops[i].G;
+				radial.StopColors[i].B = stops[i].B;
+				radial.StopColors[i].A = stops[i].A;
+				radial.StopPoints[i].X = stops[i].Offset;
+			}
+		}
 	}
 }

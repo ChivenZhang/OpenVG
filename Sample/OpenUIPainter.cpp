@@ -15,15 +15,9 @@ public:
 	UIPen Pen;
 	UIFont Font;
 	UIBrush Brush;
-	UIRect ClipRect, Viewport;
+	UIRect Scissor, Viewport;
 	bool EnableCilp = false;
-
 	VGShapeRef RectFillShape;
-	VGShapeRef RectStrokeShape;
-	VGShapeRef RoundedRectFillShape;
-	VGShapeRef RoundedRectStrokeShape;
-	VGTextRef TextFillShape;
-	VGTextRef TextStrokeShape;
 };
 #define PRIVATE() ((OpenUIPainterPrivate*) m_Private)
 #define CONTEXT() (PRIVATE()->Context)
@@ -58,17 +52,12 @@ OpenUIPainter::~OpenUIPainter()
 	delete m_Private; m_Private = nullptr;
 }
 
-UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, UIString const& text, float cursor, int* row, int* column, UIRectRaw cursorRect)
+UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, UIString const& text, float cursor, UIRectRaw cursorRect)
 {
 	return UIRect();
 }
 
-UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, UIString const& text, float row, float column, int* cursor, UIRectRaw cursorRect)
-{
-	return UIRect();
-}
-
-UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, UIString const& text, float posX, float posY, int* row, int* column, int* cursor, UIRectRaw cursorRect)
+UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, UIString const& text, float posX, float posY, int* cursor, UIRectRaw cursorRect)
 {
 	return UIRect();
 }
@@ -77,23 +66,27 @@ void OpenUIPainter::drawArc(float x, float y, float width, float height, float s
 {
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(x, y);
-		shape->arcTo(width * 0.5f, height * 0.5f, width * 0.5f, height * 0.5f, 0.0f, startAngle, spanAngle);
-		shape->close();
+		VGShape shape;
+		shape.moveTo(x, y);
+		shape.arcTo(width * 0.5f, height * 0.5f, width * 0.5f, height * 0.5f, startAngle, spanAngle);
+		shape.close();
 		auto color = getBrush().Color;
-		shape->setFillColor({ color.R, color.G, color.B, color.A });
-		PRIVATE()->Context->fillElement(shape);
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->fillElement(&shape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(x, y);
-		shape->arcTo(width * 0.5f, height * 0.5f, width * 0.5f, height * 0.5f, 0.0f, startAngle, spanAngle);
-		shape->close();
+		VGShape shape;
+		shape.moveTo(x, y);
+		shape.arcTo(width * 0.5f, height * 0.5f, width * 0.5f, height * 0.5f, startAngle, spanAngle);
+		shape.close();
 		auto color = getPen().Color;
-		shape->setStrokeColor({ color.R, color.G, color.B, color.A });
-		PRIVATE()->Context->strokeElement(shape);
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -106,20 +99,26 @@ void OpenUIPainter::drawEllipse(float x, float y, float width, float height)
 	if (width <= 0 || height <= 0) return;
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 0, 360);
-		shape->close();
-		shape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
-		PRIVATE()->Context->fillElement(shape);
+		VGShape shape;
+		shape.arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 360);
+		shape.close();
+		auto color = getBrush().Color;
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->fillElement(&shape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 0, 360);
-		shape->close();
-		shape->setLineWidth(getPen().Width);
-		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-		PRIVATE()->Context->strokeElement(shape);
+		VGShape shape;
+		shape.arcTo(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f, 0, 360);
+		shape.close();
+		shape.setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -131,14 +130,16 @@ void OpenUIPainter::drawLine(float x1, float y1, float x2, float y2)
 {
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(x1, y1);
-		shape->lineTo(x2, y2);
-		shape->close();
-		shape->setLineWidth(getPen().Width);
+		VGShape shape;
+		shape.moveTo(x1, y1);
+		shape.lineTo(x2, y2);
+		shape.close();
+		shape.setLineWidth(getPen().Width);
 		auto color = getPen().Color;
-		shape->setStrokeColor({ color.R, color.G, color.B, color.A });
-		PRIVATE()->Context->strokeElement(shape);
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -146,16 +147,19 @@ void OpenUIPainter::drawLines(UIArrayView<UILine> lines)
 {
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		auto shape = VGNew<VGShape>();
+		VGShape shape;
 		for (size_t i = 0; i < lines.size(); ++i)
 		{
-			shape->moveTo(lines[i].P0.X, lines[i].P0.Y);
-			shape->lineTo(lines[i].P1.X, lines[i].P1.Y);
-			shape->close();
+			shape.moveTo(lines[i].P0.X, lines[i].P0.Y);
+			shape.lineTo(lines[i].P1.X, lines[i].P1.Y);
+			shape.close();
 		}
-		shape->setLineWidth(getPen().Width);
-		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-		PRIVATE()->Context->strokeElement(shape);
+		shape.setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -164,22 +168,28 @@ void OpenUIPainter::drawPie(float x, float y, float width, float height, float s
 	if (width <= 0 || height <= 0) return;
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(0, 0);
-		shape->arcTo(0, 0, width * 0.5f, height * 0.5f, 0, startAngle, spanAngle);
-		shape->close();
-		shape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
-		PRIVATE()->Context->fillElement(shape);
+		VGShape shape;
+		shape.moveTo(0, 0);
+		shape.arcTo(0, 0, width * 0.5f, height * 0.5f, startAngle, spanAngle);
+		shape.close();
+		auto color = getBrush().Color;
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->fillElement(&shape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(0, 0);
-		shape->arcTo(0, 0, width * 0.5f, height * 0.5f, 0, startAngle, spanAngle);
-		shape->close();
-		shape->setLineWidth(getPen().Width);
-		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-		PRIVATE()->Context->strokeElement(shape);
+		VGShape shape;
+		shape.moveTo(0, 0);
+		shape.arcTo(0, 0, width * 0.5f, height * 0.5f, startAngle, spanAngle);
+		shape.close();
+		shape.setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -201,26 +211,32 @@ void OpenUIPainter::drawPolygon(UIArrayView<UIPoint> points)
 	if (points.size() < 3) return;
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(points.front().X, points.front().Y);
+		VGShape shape;
+		shape.moveTo(points.front().X, points.front().Y);
 		for (size_t i = 1; i < points.size(); ++i)
-			shape->lineTo(points[i].X, points[i].Y);
-		shape->lineTo(points.front().X, points.front().Y);
-		shape->close();
-		shape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
-		PRIVATE()->Context->fillElement(shape);
+			shape.lineTo(points[i].X, points[i].Y);
+		shape.lineTo(points.front().X, points.front().Y);
+		shape.close();
+		auto color = getBrush().Color;
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->fillElement(&shape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(points.front().X, points.front().Y);
+		VGShape shape;
+		shape.moveTo(points.front().X, points.front().Y);
 		for (size_t i = 1; i < points.size(); ++i)
-			shape->lineTo(points[i].X, points[i].Y);
-		shape->lineTo(points.front().X, points.front().Y);
-		shape->close();
-		shape->setLineWidth(getPen().Width);
-		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-		PRIVATE()->Context->strokeElement(shape);
+			shape.lineTo(points[i].X, points[i].Y);
+		shape.lineTo(points.front().X, points.front().Y);
+		shape.close();
+		shape.setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -229,14 +245,17 @@ void OpenUIPainter::drawPolyline(UIArrayView<UIPoint> points)
 	if (points.size() < 2) return;
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		auto shape = VGNew<VGShape>();
-		shape->moveTo(points.front().X, points.front().Y);
+		VGShape shape;
+		shape.moveTo(points.front().X, points.front().Y);
 		for (size_t i = 1; i < points.size(); ++i)
-			shape->lineTo(points[i].X, points[i].Y);
-		shape->close();
-		shape->setLineWidth(getPen().Width);
-		shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-		PRIVATE()->Context->strokeElement(shape);
+			shape.lineTo(points[i].X, points[i].Y);
+		shape.close();
+		shape.setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -248,35 +267,39 @@ void OpenUIPainter::drawRect(float x, float y, float width, float height)
 		{
 			PRIVATE()->RectFillShape = VGNew<VGShape>();
 			PRIVATE()->RectFillShape->moveTo(0, 0);
-			PRIVATE()->RectFillShape->lineTo(0, 0 + 10);
-			PRIVATE()->RectFillShape->lineTo(0 + 10, 0 + 10);
-			PRIVATE()->RectFillShape->lineTo(0 + 10, 0);
+			PRIVATE()->RectFillShape->lineTo(0, 0 + 100);
+			PRIVATE()->RectFillShape->lineTo(0 + 100, 0 + 100);
+			PRIVATE()->RectFillShape->lineTo(0 + 100, 0);
 			PRIVATE()->RectFillShape->close();
 		}
-		PRIVATE()->RectFillShape->setRotate(0);
-		PRIVATE()->RectFillShape->setTranslate({ x, y });
-		PRIVATE()->RectFillShape->setScale({ width * 0.1f , height * 0.1f });
-		PRIVATE()->RectFillShape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
-		CONTEXT()->fillElement(PRIVATE()->RectFillShape);
+		auto& shape = *PRIVATE()->RectFillShape.get();
+		shape.setRotate(0);
+		shape.setTranslate({ x, y });
+		shape.setScale({ width * 0.01f , height * 0.01f });
+		auto color = getBrush().Color;
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->fillElement(&shape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		if (PRIVATE()->RectStrokeShape == nullptr)
-		{
-			PRIVATE()->RectStrokeShape = VGNew<VGShape>();
-		}
-		PRIVATE()->RectStrokeShape->reset();
-		PRIVATE()->RectStrokeShape->moveTo(x, y);
-		PRIVATE()->RectStrokeShape->lineTo(x, y + height);
-		PRIVATE()->RectStrokeShape->lineTo(x + width, y + height);
-		PRIVATE()->RectStrokeShape->lineTo(x + width, y);
-		PRIVATE()->RectStrokeShape->close();
-		PRIVATE()->RectStrokeShape->setRotate(0);
-		PRIVATE()->RectStrokeShape->setScale(1, 1);
-		PRIVATE()->RectStrokeShape->setTranslate(0, 0);
-		PRIVATE()->RectStrokeShape->setLineWidth(getPen().Width);
-		PRIVATE()->RectStrokeShape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-		CONTEXT()->strokeElement(PRIVATE()->RectStrokeShape);
+		VGShape shape;
+		shape.reset();
+		shape.moveTo(x, y);
+		shape.lineTo(x, y + height);
+		shape.lineTo(x + width, y + height);
+		shape.lineTo(x + width, y);
+		shape.close();
+		shape.setRotate(0);
+		shape.setScale(1, 1);
+		shape.setTranslate(0, 0);
+		shape.setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -292,36 +315,36 @@ void OpenUIPainter::drawRoundedRect(float x, float y, float width, float height,
 {
 	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
 	{
-		if (PRIVATE()->RoundedRectFillShape == nullptr)
-		{
-			PRIVATE()->RoundedRectFillShape = VGNew<VGShape>();
-		}
-		PRIVATE()->RoundedRectFillShape->reset();
-		PRIVATE()->RoundedRectFillShape->arcTo(0 + width - xRadius, 0 + yRadius, xRadius, yRadius, 0, -90, 0);
-		PRIVATE()->RoundedRectFillShape->arcTo(0 + width - xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 0, 90);
-		PRIVATE()->RoundedRectFillShape->arcTo(0 + xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 90, 180);
-		PRIVATE()->RoundedRectFillShape->arcTo(0 + xRadius, 0 + yRadius, xRadius, yRadius, 0, 180, 270);
-		PRIVATE()->RoundedRectFillShape->close();
-		PRIVATE()->RoundedRectFillShape->setTranslate({ x, y });
-		PRIVATE()->RoundedRectFillShape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
-		CONTEXT()->fillElement(PRIVATE()->RoundedRectFillShape);
+		VGShape shape;
+		shape.reset();
+		shape.arcTo(0 + xRadius, 0 + yRadius, xRadius, yRadius, 180, 90);
+		shape.arcTo(0 + width - xRadius, 0 + yRadius, xRadius, yRadius, -90, 90);
+		shape.arcTo(0 + width - xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 90);
+		shape.arcTo(0 + xRadius, 0 + height - yRadius, xRadius, yRadius, 90, 90);
+		shape.close();
+		shape.setTranslate({ x, y });
+		auto color = getBrush().Color;
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->fillElement(&shape);
 	}
 	if (PRIVATE()->Pen.Style != UIPen::NoPen)
 	{
-		if (PRIVATE()->RoundedRectStrokeShape == nullptr)
-		{
-			PRIVATE()->RoundedRectStrokeShape = VGNew<VGShape>();
-		}
-		PRIVATE()->RoundedRectStrokeShape->reset();
-		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + width - xRadius, 0 + yRadius, xRadius, yRadius, 0, -90, 0);
-		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + width - xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 0, 90);
-		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 90, 180);
-		PRIVATE()->RoundedRectStrokeShape->arcTo(0 + xRadius, 0 + yRadius, xRadius, yRadius, 0, 180, 270);
-		PRIVATE()->RoundedRectStrokeShape->close();
-		PRIVATE()->RoundedRectStrokeShape->setTranslate({ x, y });
-		PRIVATE()->RoundedRectStrokeShape->setLineWidth(getPen().Width);
-		PRIVATE()->RoundedRectStrokeShape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-		CONTEXT()->strokeElement(PRIVATE()->RoundedRectStrokeShape);
+		VGShape shape;
+		shape.reset();
+		shape.arcTo(0 + xRadius, 0 + yRadius, xRadius, yRadius, 180, 90);
+		shape.arcTo(0 + width - xRadius, 0 + yRadius, xRadius, yRadius, -90, 90);
+		shape.arcTo(0 + width - xRadius, 0 + height - yRadius, xRadius, yRadius, 0, 90);
+		shape.arcTo(0 + xRadius, 0 + height - yRadius, xRadius, yRadius, 90, 90);
+		shape.close();
+		shape.setTranslate({ x, y });
+		shape.setLineWidth(getPen().Width);
+		auto color = getPen().Color;
+		shape.setStrokeColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		CONTEXT()->strokeElement(&shape);
 	}
 }
 
@@ -388,7 +411,7 @@ void OpenUIPainter::setClipping(bool enable)
 
 void OpenUIPainter::setClipRect(float x, float y, float width, float height)
 {
-	PRIVATE()->ClipRect = { x, y, width, height };
+	PRIVATE()->Scissor = { x, y, width, height };
 }
 
 void OpenUIPainter::setViewport(float x, float y, float width, float height)
@@ -462,5 +485,12 @@ uint32_t OpenUIPainter::getTexture() const
 
 void OpenUIPainter::setTexture(uint32_t value)
 {
-	// Nothing
+	PRIVATE()->NativeTexture = value;
+	glBindFramebuffer(GL_FRAMEBUFFER, PRIVATE()->NativeFrame);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, PRIVATE()->NativeTexture, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cerr << "FBO is not complete!" << std::endl;
+		::exit(-1);
+	}
 }

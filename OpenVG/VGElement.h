@@ -41,16 +41,20 @@ public:
 	VGElement();
 	virtual ~VGElement();
 
-	VGFloat2 getScale() const;
-	void setScale(VGFloat2 value);
-	void setScale(float sx, float sy) { setScale({ sx, sy }); }
-
 	float getRotate() const;
 	void setRotate(float value);
 
+	VGFloat2 getScale() const;
+	void setScale(float sx, float sy);
+	void setScale(VGFloat2 value) { setScale(value.X, value.Y); }
+
 	VGFloat2 getTranslate() const;
-	void setTranslate(VGFloat2 value);
-	void setTranslate(float tx, float ty) { setTranslate({ tx, ty }); }
+	void setTranslate(float tx, float ty);
+	void setTranslate(VGFloat2 value) { setTranslate(value.X, value.Y); }
+
+	VGFloat4 getScissor() const;
+	void setScissor(float x, float y, float width, float height);
+	void setScissor(VGFloat4 value) { setScissor(value[0], value[1], value[2], value[3]); }
 
 protected:
 	virtual void clip() = 0;

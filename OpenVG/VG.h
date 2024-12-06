@@ -74,6 +74,10 @@
 #	endif
 #endif
 
+#ifndef OPENVG_OPENGL
+	// Other Backend
+#endif
+
 // ============================================
 
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -99,7 +103,7 @@
 #if 20 <= OPENVG_CPP_VERSION
 #include <span>
 #else
-#include "span.h"
+#include <Utility/span.h>
 #endif
 #include <vector>
 #include <deque>
@@ -202,6 +206,23 @@ template<class T>
 using VGString16HashMap = VGHashMap<VGString16, T>;
 template<class T>
 using VGString32HashMap = VGHashMap<VGString32, T>;
+
+// ============================================
+
+#include <time.h>
+#define VGPrint(FORMAT, ...) do{ fprintf(stdout, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "INFO", __VA_ARGS__); }while(0)
+#define VGError(FORMAT, ...) do{ fprintf(stderr, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "ERROR", __VA_ARGS__); }while(0)
+#define VGFatal(FORMAT, ...) do{ fprintf(stderr, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "FATAL", __VA_ARGS__); exit(1); }while(0)
+#ifdef OPENVG_DEBUG_MODE
+#define VGDebug(FORMAT, ...) do{ fprintf(stdout, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "DEBUG", __VA_ARGS__); }while(0)
+#else													
+#define VGDebug(FORMAT, ...)
+#endif
+
+#define VGPRINT VGPrint
+#define VGERROR VGError
+#define VGFATAL VGFatal
+#define VGDEBUG VGDebug
 
 // ============================================
 
@@ -493,10 +514,30 @@ struct VGColorStop
 
 struct VGImage
 {
-	uint32_t Width = 0, Height = 0, Stride = 0;
-	VGArrayView<const uint8_t> Data;
+	uint32_t Width = 0, Height = 0, Stride = 0, Channel = 0;
+	union { void* Pixel; size_t Data = 0; };
+	enum type_t { Byte = 0, HWByte, Float, HWFloat, } Type = Byte;
 };
 using VGImageRaw = VGRaw<VGImage>;
+
+inline bool operator ==(VGImage const& a, VGImage const& b)
+{
+	return a.Width == b.Width
+		&& a.Height == b.Height
+		&& a.Stride == b.Stride
+		&& a.Channel == b.Channel
+		&& a.Data == b.Data
+		&& a.Type == b.Type;
+}
+inline bool operator <(VGImage const& a, VGImage const& b)
+{
+	if (a.Width != b.Width) return a.Width < b.Width;
+	if (a.Height != b.Height) return a.Height < b.Height;
+	if (a.Stride != b.Stride) return a.Stride < b.Stride;
+	if (a.Channel != b.Channel) return a.Channel < b.Channel;
+	if (a.Data != b.Data) return a.Data < b.Data;
+	return a.Type < b.Type;
+}
 
 enum class VGStrokeCap : uint8_t
 {
@@ -512,10 +553,11 @@ enum class VGStrokeJoin : uint8_t
 	Bevel,		///< The outer corner of the joined path segments is bevelled at the join point. The triangular region of the corner is enclosed by a straight line between the outer corners of each stroke.
 };
 
-#define VG_FLAGS_FILL_STROKE 0x0001
-#define VG_FLAGS_COLOR_IMAGE 0x0002
-#define VG_FLAGS_STYLE_LINEAR 0x0004
-#define VG_FLAGS_STYLE_RADIAL 0x0008
+#define VG_FLAGS_IMAGE_COLOR 0x0001
+#define VG_FLAGS_IMAGE_GLYPH 0x0002
+#define VG_FLAGS_IMAGE_HWGPU 0x0004
+#define VG_FLAGS_STYLE_LINEAR 0x0010
+#define VG_FLAGS_STYLE_RADIAL 0x0020
 
 struct VGPrimitive
 {
@@ -550,8 +592,13 @@ struct VGPrimitive
 		VGFloat4  StopPoints[MAX_STOP_COUNT / 4];
 		VGColor   StopColors[MAX_STOP_COUNT];
 	};
+	struct matrix_t
+	{
+		VGFloat4 Scissor;
+		VGFloat3x3 Transform;
+	};
 	using image_t = VGImage;
-	using matrix_t = VGFloat3x3;
+	using scissor_t = VGRect;
 
 	VGVector<point_t> PointList;
 	VGVector<style_t> StyleList;
@@ -559,6 +606,7 @@ struct VGPrimitive
 	VGVector<linear_t> LinearList;
 	VGVector<radial_t> RadialList;
 	VGVector<matrix_t> MatrixList;
+	VGVector<scissor_t> ScissorList;
 };
 using VGPrimitiveRaw = VGRaw<VGPrimitive>;
 using VGPrimitiveRef = VGRef<VGPrimitive>;
@@ -613,3 +661,34 @@ enum VGTextEllipsize
 	EllipsizeMiddle = 2,
 	EllipsizeEnd = 3,
 };
+
+inline VGRect VGOverlap(VGRect const& viewport, VGRect const& client)
+{
+	// 计算两个矩形的右下角坐标  
+	float xA1 = viewport.X;
+	float yA1 = viewport.Y;
+	float xA2 = viewport.X + viewport.W;
+	float yA2 = viewport.Y + viewport.H;
+	float xB1 = client.X;
+	float yB1 = client.Y;
+	float xB2 = client.X + client.W;
+	float yB2 = client.Y + client.H;
+
+	// 检查是否有重叠  
+	if (xA2 <= xB1 || xB2 <= xA1 || yA2 <= yB1 || yB2 <= yA1) return VGRect{};
+
+	// 计算重叠区域的左上角坐标  
+	float overlapX1 = std::max(xA1, xB1);
+	float overlapY1 = std::max(yA1, yB1);
+
+	// 计算重叠区域的右下角坐标  
+	float overlapX2 = std::min(xA2, xB2);
+	float overlapY2 = std::min(yA2, yB2);
+
+	// 计算重叠区域的宽度和高度  
+	float overlapWidth = overlapX2 - overlapX1;
+	float overlapHeight = overlapY2 - overlapY1;
+
+	// 创建一个表示重叠区域的矩形（如果有的话）  
+	return VGRect{ overlapX1, overlapY1, overlapWidth, overlapHeight };
+}

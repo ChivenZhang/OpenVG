@@ -1,14 +1,48 @@
 #pragma once
 #include <OpenVG/VGRender.h>
+#include <stb_rect_pack.h>
 
+class OpenVGTextures
+{
+public:
+	struct texture_t
+	{
+		uint32_t Handle;
+		VGRect Bounds;
+	};
+	struct context_t
+	{
+		uint32_t Texture = 0;
+		uint32_t Format = 0;	// 0: byte , 1: float
+		uint32_t X = 0, Y = 0, W = 0, H = 0;
+	};
+
+public:
+	int renderCreate(context_t& context, int format, int width, int height);
+	int renderResize(context_t& context, int format, int width, int height);
+	void renderUpdate(context_t& context, int format, int* rect, const unsigned char* data);
+	void renderDelete(context_t& context);
+
+public:
+	static VGRaw<OpenVGTextures> Instance();
+	OpenVGTextures();
+	~OpenVGTextures();
+	texture_t getTexture(VGImage image, bool glyph = false);
+
+protected:
+
+protected:
+	context_t m_FontStashTexture;
+	VGMap<VGImage, context_t> m_ImageTextureMap;
+	VGMap<VGImage, context_t> m_GlyphTextureMap;
+};
 
 class OpenVGRender : public VGRender
 {
 public:
 	OpenVGRender();
 	~OpenVGRender();
-
-	virtual void render(VGRect client, VGArrayView<const VGPrimitive> data) override;
+	void render(VGRect client, VGArrayView<const VGPrimitive> data) override;
 
 protected:
 	uint32_t m_NativeProgram;
@@ -18,11 +52,12 @@ protected:
 	uint32_t m_NativeRadialBuffer;
 	uint32_t m_NativeMatrixBuffer;
 	uint32_t m_NativePrimitive;
-	size_t m_PrimitiveIndex;
-	VGVector<void*> m_TextureList;
+	size_t m_PrimitiveIndex = 0;
+
 	VGVector<VGPrimitive::point_t> m_PointList;
 	VGVector<VGPrimitive::style_t> m_StyleList;
 	VGVector<VGPrimitive::linear_t> m_LinearList;
 	VGVector<VGPrimitive::radial_t> m_RadialList;
 	VGVector<VGPrimitive::matrix_t> m_MatrixList;
+	VGVector<OpenVGTextures::texture_t> m_TextureList;
 };

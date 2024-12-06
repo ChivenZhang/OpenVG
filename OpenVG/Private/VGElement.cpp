@@ -1,5 +1,4 @@
 #include "VGElement.h"
-#include "VGElement.h"
 #include "../VGElement.h"
 
 class VGElementPrivateData : public VGElementPrivate
@@ -7,6 +6,7 @@ class VGElementPrivateData : public VGElementPrivate
 public:
 	float Rotation = 0;
 	VGFloat2 Translate = { 0,0 }, Scaling = { 1,1 };
+	VGFloat4 Scissor = { 0, 0, -1, -1 };
 	VGPrimitiveRef ClipCache, FillCache, StrokeCache;
 };
 #define PRIVATE() ((VGElementPrivateData*) m_Private)
@@ -21,16 +21,6 @@ VGElement::~VGElement()
 	delete m_Private; m_Private = nullptr;
 }
 
-VGFloat2 VGElement::getScale() const
-{
-	return PRIVATE()->Scaling;
-}
-
-void VGElement::setScale(VGFloat2 value)
-{
-	PRIVATE()->Scaling = value;
-}
-
 float VGElement::getRotate() const
 {
 	return PRIVATE()->Rotation;
@@ -41,14 +31,34 @@ void VGElement::setRotate(float value)
 	PRIVATE()->Rotation = value;
 }
 
+VGFloat2 VGElement::getScale() const
+{
+	return PRIVATE()->Scaling;
+}
+
+void VGElement::setScale(float sx, float sy)
+{
+	PRIVATE()->Scaling = { sx, sy };
+}
+
 VGFloat2 VGElement::getTranslate() const
 {
 	return PRIVATE()->Translate;
 }
 
-void VGElement::setTranslate(VGFloat2 value)
+void VGElement::setTranslate(float tx, float ty)
 {
-	PRIVATE()->Translate = value;
+	PRIVATE()->Translate = { tx, ty };
+}
+
+VGFloat4 VGElement::getScissor() const
+{
+	return PRIVATE()->Scissor;
+}
+
+void VGElement::setScissor(float x, float y, float width, float height)
+{
+	PRIVATE()->Scissor = { x, y, width, height };
 }
 
 VGPrimitiveRaw VGElement::getClipCache() const

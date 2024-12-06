@@ -42,7 +42,7 @@ OpenUIRender::OpenUIRender()
 	{
 		GLchar infoLog[512];
 		glGetShaderInfoLog(vshader, 512, NULL, infoLog);
-		std::cerr << "Shader compilation failed: " << infoLog << std::endl;
+		UIFatal("Shader compilation failed: %s", (const char*)infoLog);
 		glDeleteShader(vshader); // 删除着色器，防止内存泄漏  
 		::exit(-1);
 	}
@@ -56,7 +56,7 @@ OpenUIRender::OpenUIRender()
 	{
 		GLchar infoLog[512];
 		glGetShaderInfoLog(fshader, 512, NULL, infoLog);
-		std::cerr << "Shader compilation failed: " << infoLog << std::endl;
+		UIFatal("Shader compilation failed: %s", (const char*)infoLog);
 		glDeleteShader(fshader); // 删除着色器，防止内存泄漏  
 		::exit(-1);
 	}
@@ -71,7 +71,7 @@ OpenUIRender::OpenUIRender()
 	{
 		GLchar infoLog[512];
 		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cerr << "Shader program linking failed: " << infoLog << std::endl;
+		UIFatal("Shader program linking failed: %s", (const char*)infoLog);
 		glDeleteProgram(shaderProgram); // 删除程序，防止内存泄漏  
 		::exit(-1);
 	}
@@ -112,8 +112,8 @@ OpenUIRender::~OpenUIRender()
 
 void OpenUIRender::render(UIRect client, UIArrayView<UIPrimitive> data)
 {
-	int32_t maxTextureUnits = 16;
-	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+	static int32_t maxTextureUnits = 0;
+	if (maxTextureUnits == 0) glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
 	for (size_t i = 0; i < data.size(); i += maxTextureUnits)
 	{
 		m_PrimitiveList.clear();

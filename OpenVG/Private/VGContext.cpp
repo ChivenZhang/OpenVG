@@ -38,22 +38,22 @@ void VGContext::setRender(VGRenderRef value)
 	PRIVATE()->Render = value;
 }
 
-void VGContext::clipElement(VGElementRef value)
+void VGContext::clipElement(VGElementRaw value)
 {
 	if (PRIVATE()->Render == nullptr) return;
-	PRIVATE()->Painter->clip(value.get());
+	PRIVATE()->Painter->clip(value);
 }
 
-void VGContext::fillElement(VGElementRef value)
+void VGContext::fillElement(VGElementRaw value)
 {
 	if (PRIVATE()->Render == nullptr) return;
-	PRIVATE()->Painter->fill(value.get());
+	PRIVATE()->Painter->fill(value);
 }
 
-void VGContext::strokeElement(VGElementRef value)
+void VGContext::strokeElement(VGElementRaw value)
 {
 	if (PRIVATE()->Render == nullptr) return;
-	PRIVATE()->Painter->stroke(value.get());
+	PRIVATE()->Painter->stroke(value);
 }
 
 void VGContext::animateElement(float time)

@@ -1,109 +1,34 @@
-#include "VGTessellate.h"
-#include "VGPath.h"
-#include <tesselator.h>
-#include <micro-tess/path.h>
-#include <micro-tess/static_array.h>
-#include <micro-tess/dynamic_array.h>
-#include <micro-tess/std_rebind_allocator.h>
+#include "../VGTessellate.h"
+#include <skia/core/SkPath.h>
+#include <skia/core/SkPaint.h>
+#include <skia/core/SkRefCnt.h>
+#include <skia/core/SkStrokeRec.h>
+#include <skia/core/SkPathEffect.h>
+#include <skia/effects/SkDashPathEffect.h>
+#include <skia/private/base/SkTemplates.h>
+#include <skia/gpu/ganesh/GrEagerVertexAllocator.h>
+#include <skia/gpu/ganesh/geometry/GrPathUtils.h>
+#include <skia/gpu/ganesh/geometry/GrTriangulator.h>
 
-bool VGTessellate::Fill(VGShapeRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndices)
+class SimpleVertexAllocator : public GrEagerVertexAllocator {
+public:
+	void* lock(size_t stride, int eagerCount) override {
+		SkASSERT(!fPoints);
+		SkASSERT(stride == sizeof(SkPoint));
+		fPoints.reset(eagerCount);
+		return fPoints;
+	}
+	void unlock(int actualCount) override {}
+	SkPoint operator[](int idx) const { return fPoints[idx]; }
+	skia_private::AutoTMalloc<SkPoint> fPoints;
+};
+
+bool VGTessellate::Fill(VGShapeRaw element, VGPrimitiveRaw result)
 {
 	auto points = element->getPointList();
 	auto types = element->getTypeList();
 
-	VGPath path;
-	for (size_t i = 0, k = 0; i < types.size(); ++i)
-	{
-		switch (types[i])
-		{
-		case VGPointType::MoveTo:
-		{
-			path.moveTo(points[k].X, points[k].Y);
-			k += 1;
-		} break;
-		case VGPointType::LineTo:
-		{
-			path.lineTo(points[k].X, points[k].Y);
-			k += 1;
-		} break;
-		case VGPointType::CurveTo:
-		{
-			auto c1 = points[k + 0];
-			auto last = points[k + 1];
-			path.quadraticCurveTo(c1.X, c1.Y, last.X, last.Y);
-			k += 2;
-		} break;
-		case VGPointType::CubicTo:
-		{
-			auto c1 = points[k + 0];
-			auto c2 = points[k + 1];
-			auto last = points[k + 2];
-			path.cubicBezierCurveTo(c1.X, c1.Y, c2.X, c2.Y, last.X, last.Y);
-			k += 3;
-		} break;
-		case VGPointType::ArcTo:
-		{
-			auto c1 = points[k + 0];
-			auto r1 = points[k + 1];
-			auto a1 = points[k + 2];
-			path.arc(c1.X, c1.Y, r1.X, a1.X, a1.Y, false);
-			k += 3;
-		} break;
-		case VGPointType::PieTo:
-		{
-			auto c1 = points[k + 0];
-			auto r1 = points[k + 1];
-			auto a1 = points[k + 2];
-			path.arc(c1.X, c1.Y, r1.X, a1.X, a1.Y, false);
-			k += 3;
-		} break;
-		case VGPointType::ChordTo:
-		{
-			auto c1 = points[k + 0];
-			auto r1 = points[k + 1];
-			auto a1 = points[k + 2];
-			path.arc(c1.X, c1.Y, r1.X, a1.X, a1.Y, false);
-			k += 3;
-		} break;
-		case VGPointType::Close:
-		{
-			path.closePath();
-		} break;
-		}
-	}
-	auto tessellatedPath = path.tessellatePath(2.0);
-
-	TESStesselator* tess = tessNewTess(nullptr);
-	tessAddContour(tess, 2, tessellatedPath.data(), sizeof(VGPoint), tessellatedPath.size());
-	if (tessTesselate(tess, TESS_WINDING_ODD, TESS_POLYGONS, 3, 2, nullptr))
-	{
-		auto vertices = tessGetVertices(tess);
-		auto indices = tessGetElements(tess);
-		auto vertexCount = tessGetVertexCount(tess);
-		auto elementCount = tessGetElementCount(tess);
-		for (size_t k = 0; k < vertexCount; ++k)
-		{
-			outPoints.push_back({ vertices[2 * k + 0], vertices[2 * k + 1] });
-		}
-
-		for (size_t k = 0; k < elementCount; ++k)
-		{
-			outIndices.push_back(indices[3 * k + 0]);
-			outIndices.push_back(indices[3 * k + 1]);
-			outIndices.push_back(indices[3 * k + 2]);
-		}
-		tessDeleteTess(tess);
-		return true;
-	}
-	tessDeleteTess(tess);
-	return false;
-}
-
-bool VGTessellate::Stroke(VGShapeRaw element, VGVector<point_t>& outPoints, VGVector<index_t>& outIndices)
-{
-	auto points = element->getPointList();
-	auto types = element->getTypeList();
-	microtess::path<float, dynamic_array, microtess::std_rebind_allocator<>> path{};
+	SkPath path;
 	for (size_t i = 0, k = 0; i < types.size(); ++i)
 	{
 		switch (types[i])
@@ -122,7 +47,7 @@ bool VGTessellate::Stroke(VGShapeRaw element, VGVector<point_t>& outPoints, VGVe
 		{
 			auto c1 = points[k + 0];
 			auto last = points[k + 1];
-			path.quadraticCurveTo({ c1.X, c1.Y }, { last.X, last.Y });
+			path.quadTo({ c1.X, c1.Y }, { last.X, last.Y });
 			k += 2;
 		} break;
 		case VGPointType::CubicTo:
@@ -130,7 +55,7 @@ bool VGTessellate::Stroke(VGShapeRaw element, VGVector<point_t>& outPoints, VGVe
 			auto c1 = points[k + 0];
 			auto c2 = points[k + 1];
 			auto end = points[k + 2];
-			path.cubicBezierCurveTo({ c1.X, c1.Y }, { c2.X, c2.Y }, { end.X, end.Y });
+			path.cubicTo({ c1.X, c1.Y }, { c2.X, c2.Y }, { end.X, end.Y });
 			k += 3;
 		} break;
 		case VGPointType::ArcTo:
@@ -138,7 +63,7 @@ bool VGTessellate::Stroke(VGShapeRaw element, VGVector<point_t>& outPoints, VGVe
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
 			auto a1 = points[k + 2];
-			path.ellipse({ c1.X, c1.Y }, r1.X, r1.Y, 0, a1.X, a1.Y, false);
+			path.arcTo({ c1.X - r1.X, c1.Y - r1.Y, c1.X + r1.X, c1.Y + r1.Y }, a1.X, a1.Y, false);
 			k += 3;
 		} break;
 		case VGPointType::PieTo:
@@ -146,7 +71,7 @@ bool VGTessellate::Stroke(VGShapeRaw element, VGVector<point_t>& outPoints, VGVe
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
 			auto a1 = points[k + 2];
-			path.pie({ c1.X, c1.Y }, r1.X, r1.Y, 0, a1.X, a1.Y, false);
+			path.arcTo({ c1.X - r1.X, c1.Y - r1.Y, c1.X + r1.X, c1.Y + r1.Y }, a1.X, a1.Y, false);
 			k += 3;
 		} break;
 		case VGPointType::ChordTo:
@@ -154,51 +79,145 @@ bool VGTessellate::Stroke(VGShapeRaw element, VGVector<point_t>& outPoints, VGVe
 			auto c1 = points[k + 0];
 			auto r1 = points[k + 1];
 			auto a1 = points[k + 2];
-			path.chord({ c1.X, c1.Y }, r1.X, r1.Y, 0, a1.X, a1.Y, false);
+			path.arcTo({ c1.X - r1.X, c1.Y - r1.Y, c1.X + r1.X, c1.Y + r1.Y }, a1.X, a1.Y, false);
 			k += 3;
 		} break;
 		case VGPointType::Close:
 		{
-			path.closePath();
+			path.close();
+		} break;
+		}
+	}
+
+	bool isLinear = false;
+	SimpleVertexAllocator allocator;
+	auto count = GrTriangulator::PathToTriangles(path, GrPathUtils::kDefaultTolerance, path.getBounds(), &allocator, &isLinear);
+	if (count)
+	{
+		auto& vertices = allocator.fPoints;
+		auto& outPoints = result->PointList;
+		for (size_t i = 0; i + 3 <= count; i += 3)
+		{
+			outPoints.push_back({ vertices[i + 0].fX, vertices[i + 0].fY, -1, -1, 0, 0 });
+			outPoints.push_back({ vertices[i + 1].fX, vertices[i + 1].fY, -1, -1, 0, 0 });
+			outPoints.push_back({ vertices[i + 2].fX, vertices[i + 2].fY, -1, -1, 0, 0 });
+		}
+		return true;
+	}
+	return false;
+}
+
+bool VGTessellate::Stroke(VGShapeRaw element, VGPrimitiveRaw result)
+{
+	auto points = element->getPointList();
+	auto types = element->getTypeList();
+
+	SkPath path;
+	for (size_t i = 0, k = 0; i < types.size(); ++i)
+	{
+		switch (types[i])
+		{
+		case VGPointType::MoveTo:
+		{
+			path.moveTo({ points[k].X, points[k].Y });
+			k += 1;
+		} break;
+		case VGPointType::LineTo:
+		{
+			path.lineTo({ points[k].X, points[k].Y });
+			k += 1;
+		} break;
+		case VGPointType::CurveTo:
+		{
+			auto c1 = points[k + 0];
+			auto last = points[k + 1];
+			path.quadTo({ c1.X, c1.Y }, { last.X, last.Y });
+			k += 2;
+		} break;
+		case VGPointType::CubicTo:
+		{
+			auto c1 = points[k + 0];
+			auto c2 = points[k + 1];
+			auto end = points[k + 2];
+			path.cubicTo({ c1.X, c1.Y }, { c2.X, c2.Y }, { end.X, end.Y });
+			k += 3;
+		} break;
+		case VGPointType::ArcTo:
+		{
+			auto c1 = points[k + 0];
+			auto r1 = points[k + 1];
+			auto a1 = points[k + 2];
+			path.arcTo({ c1.X - r1.X, c1.Y - r1.Y, c1.X + r1.X, c1.Y + r1.Y }, a1.X, a1.Y, false);
+			k += 3;
+		} break;
+		case VGPointType::PieTo:
+		{
+			auto c1 = points[k + 0];
+			auto r1 = points[k + 1];
+			auto a1 = points[k + 2];
+			path.arcTo({ c1.X - r1.X, c1.Y - r1.Y, c1.X + r1.X, c1.Y + r1.Y }, a1.X, a1.Y, false);
+			k += 3;
+		} break;
+		case VGPointType::ChordTo:
+		{
+			auto c1 = points[k + 0];
+			auto r1 = points[k + 1];
+			auto a1 = points[k + 2];
+			path.arcTo({ c1.X - r1.X, c1.Y - r1.Y, c1.X + r1.X, c1.Y + r1.Y }, a1.X, a1.Y, false);
+			k += 3;
+		} break;
+		case VGPointType::Close:
+		{
+			path.close();
 		} break;
 		}
 	}
 
 	auto strokeWidth = element->getLineWidth();
-	auto miterLimit = element->getMiterLimit();
-	auto dashOffset = (int32_t)element->getDashOffset();
+	auto strokeMiter = element->getMiterLimit();
 	auto dashControl = element->getLineDash();
-	auto strokeCap = microtess::stroke_cap::butt;
+	auto dashOffset = (int32_t)element->getDashOffset();
+	auto strokeCap = SkPaint::kButt_Cap;
+	auto strokeJoin = SkPaint::kBevel_Join;
 	switch (element->getLineCap())
 	{
-	case VGStrokeCap::Butt: strokeCap = microtess::stroke_cap::butt; break;
-	case VGStrokeCap::Round: strokeCap = microtess::stroke_cap::round; break;
-	case VGStrokeCap::Square: strokeCap = microtess::stroke_cap::square; break;
-	default: strokeCap = microtess::stroke_cap::butt; break;
+	case VGStrokeCap::Butt: strokeCap = SkPaint::kButt_Cap; break;
+	case VGStrokeCap::Round: strokeCap = SkPaint::kRound_Cap; break;
+	case VGStrokeCap::Square: strokeCap = SkPaint::kSquare_Cap; break;
 	}
-	auto strokeJoin = microtess::stroke_line_join::bevel;
 	switch (element->getLineJoin())
 	{
-	case VGStrokeJoin::Bevel: strokeJoin = microtess::stroke_line_join::bevel; break;
-	case VGStrokeJoin::Miter: strokeJoin = microtess::stroke_line_join::miter; break;
-	case VGStrokeJoin::Round: strokeJoin = microtess::stroke_line_join::round; break;
-	default: strokeJoin = microtess::stroke_line_join::bevel; break;
+	case VGStrokeJoin::Bevel: strokeJoin = SkPaint::kBevel_Join; break;
+	case VGStrokeJoin::Miter: strokeJoin = SkPaint::kMiter_Join; break;
+	case VGStrokeJoin::Round: strokeJoin = SkPaint::kRound_Join; break;
 	}
-	auto& buffers = path.tessellateStroke<>(strokeWidth, strokeCap, strokeJoin, miterLimit, dashControl, dashOffset, true);
-	auto& vertices = buffers.output_vertices;
-	auto& indices = buffers.output_indices;
-	if (vertices.size() && indices.size())
+	SkPaint paint;
+	paint.setStyle(SkPaint::kStroke_Style);
+	paint.setStrokeWidth(strokeWidth);
+	paint.setStrokeCap(strokeCap);
+	paint.setStrokeJoin(strokeJoin);
+	paint.setStrokeMiter(strokeMiter);
+	if (dashControl.size())
 	{
-		// 遍历三角带的每个顶点（除了最后两个，因为每个三角形需要三个顶点）  
-		for (size_t i = 0; i < indices.size() - 2; ++i)
+		auto dashEffect = SkDashPathEffect::Make(dashControl.data(), dashControl.size(), dashOffset);
+		paint.setPathEffect(dashEffect);
+	}
+	SkStrokeRec rec(paint, 1.0f);
+	rec.applyToPath(&path, path);
+
+	bool isLinear = false;
+	SimpleVertexAllocator allocator;
+	auto count = GrTriangulator::PathToTriangles(path, GrPathUtils::kDefaultTolerance, path.getBounds(), &allocator, &isLinear);
+	if (count)
+	{
+		auto& vertices = allocator.fPoints;
+		auto& outPoints = result->PointList;
+		for (size_t i = 0; i + 3 <= count; i += 3)
 		{
-			// 偶数索引：使用当前顶点、前一个顶点、下一个顶点  
-			outIndices.push_back(indices[i + 0]);
-			outIndices.push_back(indices[i + 1]);
-			outIndices.push_back(indices[i + 2]);
+			outPoints.push_back({ vertices[i + 0].fX, vertices[i + 0].fY, -1, -1, 0, 0 });
+			outPoints.push_back({ vertices[i + 1].fX, vertices[i + 1].fY, -1, -1, 0, 0 });
+			outPoints.push_back({ vertices[i + 2].fX, vertices[i + 2].fY, -1, -1, 0, 0 });
 		}
-		outPoints.resize(vertices.size());
-		::memcpy(outPoints.data(), vertices.data(), sizeof(VGFloat2) * vertices.size());
 		return true;
 	}
 	return false;

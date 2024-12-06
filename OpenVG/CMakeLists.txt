@@ -5,31 +5,35 @@ add_definitions(
 )
 
 add_library (OpenVG SHARED 
-	VG.h
-	VGContext.h
-	VGElement.h
-	VGShape.h
-	VGPicture.h
-	VGText.h 
-	VGRender.h 
-	VGBuilder.h 
-	VGFactory.h
-	VGPainter.h
-	VGGradient.h
-	VGStroke.h
 	Private/VGContext.cpp
 	Private/VGElement.cpp
-	Private/VGShape.cpp
-	Private/VGText.cpp
-	Private/VGPicture.cpp
-	Private/VGPainter.cpp
 	Private/VGGradient.cpp
-	Private/VGStroke.cpp
+	Private/VGPainter.cpp
+	Private/VGPicture.cpp
+	Private/VGShape.cpp
 	Private/VGTessellate.cpp
-	Private/VGTessellate.h
+	Private/VGText.cpp
 	Private/VGTrueType.cpp
-	Private/VGTrueType.h
- "Private/VGPath.h" "Private/VGPath.cpp")
+	VG.h
+	VGBuilder.h 
+	VGContext.h
+	VGElement.h
+	VGFactory.h
+	VGGradient.h
+	VGPainter.h
+	VGPicture.h
+	VGRender.h 
+	VGShape.h
+	VGText.h 
+	VGTrueType.h
+)
 
 target_include_directories(OpenVG PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(OpenVG libtess2 micro-tess)
+target_include_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/include)
+target_include_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/include/skia)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+        target_link_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/debug/lib)
+else()
+        target_link_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/lib)
+endif()
+target_link_libraries(OpenVG skia)

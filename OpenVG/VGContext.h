@@ -20,9 +20,9 @@ public:
 	virtual void setPainter(VGPainterRef value);
 	virtual VGRenderRaw getRender() const;
 	virtual void setRender(VGRenderRef value);
-	virtual void clipElement(VGElementRef value);
-	virtual void fillElement(VGElementRef value);
-	virtual void strokeElement(VGElementRef value);
+	virtual void clipElement(VGElementRaw value);
+	virtual void fillElement(VGElementRaw value);
+	virtual void strokeElement(VGElementRaw value);
 	virtual void animateElement(float time);
 	virtual void renderElement(VGRect client);
 
