@@ -4,6 +4,8 @@
 #include <OpenVG/VGContext.h>
 #include <OpenVG/VGShape.h>
 #include <OpenVG/VGText.h>
+#include <OpenVG/VGPicture.h>
+#include <OpenVG/VGTrueType.h>
 
 class OpenUIPainterPrivate : public UIPainterPrivate
 {
@@ -54,12 +56,86 @@ OpenUIPainter::~OpenUIPainter()
 
 UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, UIString const& text, float cursor, UIRectRaw cursorRect)
 {
-	return UIRect();
+	auto& font = PRIVATE()->Font;
+
+	VGText shape;
+	shape.setSize(font.Size);
+	shape.setFamily(font.Family);
+	shape.setSpacing(font.Spacing);
+	shape.setLineWrap(font.LineWrap);
+	shape.setLineSpacing(font.LineSpacing);
+	auto color = getBrush().Color;
+	shape.setFillColor({ color.R, color.G, color.B, color.A });
+	auto scissor = PRIVATE()->Scissor;
+	shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+	shape.setText(0, 0, width, height, text);
+
+	VGRect rect = { x, y, width, height };
+	VGRect _cursorRect;
+	VGTrueType::Measure(&shape, rect, text, cursor, &_cursorRect, rect);
+	int32_t text_width = rect.W, text_height = rect.H, baseline = 0;
+
+	if (font.Align & UIFont::AlignLeft) { rect.X = x; }
+	else if (font.Align & UIFont::AlignRight) { rect.X = x + width - text_width; }
+	else if (font.Align & UIFont::AlignCenter) { rect.X = x + std::round((width - text_width) * 0.5f); }
+	// else if (font.Align & UIFont::AlignJustify) { rect.X = x + baseline; }
+	else { rect.X = x; }
+
+	if (font.Align & UIFont::AlignTop) { rect.Y = y; }
+	else if (font.Align & UIFont::AlignBottom) { rect.Y = y + height - text_height; }
+	else if (font.Align & UIFont::AlignVCenter) { rect.Y = y + std::round((height - text_height) * 0.5f); }
+	// else if (font.Align & UIFont::AlignBaseline) { rect.Y = y + baseline; }
+	else { rect.Y = y; }
+
+	if (cursorRect)
+	{
+		*cursorRect = { rect.X + _cursorRect.X, rect.Y + _cursorRect.Y, _cursorRect.W, _cursorRect.H };
+	}
+
+	return UIRect{ rect.X, rect.Y, rect.W, rect.H };
 }
 
 UIRect OpenUIPainter::boundingRect(float x, float y, float width, float height, UIString const& text, float posX, float posY, int* cursor, UIRectRaw cursorRect)
 {
-	return UIRect();
+	auto& font = PRIVATE()->Font;
+
+	VGText shape;
+	shape.setSize(font.Size);
+	shape.setFamily(font.Family);
+	shape.setSpacing(font.Spacing);
+	shape.setLineWrap(font.LineWrap);
+	shape.setLineSpacing(font.LineSpacing);
+	auto color = getBrush().Color;
+	shape.setFillColor({ color.R, color.G, color.B, color.A });
+	auto scissor = PRIVATE()->Scissor;
+	shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+	shape.setText(0, 0, width, height, text);
+
+	VGRect rect = { x, y, width, height };
+	float _cursor;
+	VGRect _cursorRect;
+	VGTrueType::Measure(&shape, rect, text, posX - x, posY - y, &_cursor, &_cursorRect, rect);
+	int32_t text_width = rect.W, text_height = rect.H, baseline = 0;
+
+	if (font.Align & UIFont::AlignLeft) { rect.X = x; }
+	else if (font.Align & UIFont::AlignRight) { rect.X = x + width - text_width; }
+	else if (font.Align & UIFont::AlignCenter) { rect.X = x + std::round((width - text_width) * 0.5f); }
+	// else if (font.Align & UIFont::AlignJustify) { rect.X = x + baseline; }
+	else { rect.X = x; }
+
+	if (font.Align & UIFont::AlignTop) { rect.Y = y; }
+	else if (font.Align & UIFont::AlignBottom) { rect.Y = y + height - text_height; }
+	else if (font.Align & UIFont::AlignVCenter) { rect.Y = y + std::round((height - text_height) * 0.5f); }
+	// else if (font.Align & UIFont::AlignBaseline) { rect.Y = y + baseline; }
+	else { rect.Y = y; }
+
+	if (cursorRect)
+	{
+		if (cursor) *cursor = _cursor;
+		*cursorRect = { rect.X + _cursorRect.X, rect.Y + _cursorRect.Y, _cursorRect.W, _cursorRect.H };
+	}
+
+	return UIRect{ rect.X, rect.Y, rect.W, rect.H };
 }
 
 void OpenUIPainter::drawArc(float x, float y, float width, float height, float startAngle, float spanAngle)
@@ -124,6 +200,29 @@ void OpenUIPainter::drawEllipse(float x, float y, float width, float height)
 
 void OpenUIPainter::drawImage(float x, float y, UIImage image, float sx, float sy, float sw, float sh)
 {
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		auto& font = PRIVATE()->Font;
+
+		VGPicture shape;
+		auto color = getBrush().Color;
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+
+		VGImage _image;
+		_image.Width = image.Width;
+		_image.Height = image.Height;
+		_image.Stride = image.Stride;
+		_image.Pixel = image.Pixel;
+		_image.Type = (VGImage::type_t)image.Type;
+		shape.setImage(0, 0, image.Width, image.Height, _image);
+
+		shape.setRotate(0);
+		shape.setTranslate(x, y);
+		shape.setScale(1, 1);
+		CONTEXT()->fillElement(&shape);
+	}
 }
 
 void OpenUIPainter::drawLine(float x1, float y1, float x2, float y2)
@@ -350,29 +449,51 @@ void OpenUIPainter::drawRoundedRect(float x, float y, float width, float height,
 
 void OpenUIPainter::drawText(float x, float y, float width, float height, const UIString& text, UIRectRaw boundingRect, float cursor, UIRectRaw cursorRect)
 {
-	//if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
-	//{
-	//	if (PRIVATE()->TextFillShape == nullptr)
-	//	{
-	//		PRIVATE()->TextFillShape = VGNew<VGText>();
-	//		PRIVATE()->TextFillShape->setFamily(getFont().Family);
-	//		PRIVATE()->TextFillShape->setText(0, 0, width, height, text);
-	//	}
-	//	PRIVATE()->TextFillShape->setRotate(0);
-	//	PRIVATE()->TextFillShape->setTranslate(x, y);
-	//	//PRIVATE()->TextFillShape->setScale(getFont().Size * 0.01f, getFont().Size * 0.01f);
-	//	PRIVATE()->TextFillShape->setScale(25 * 0.01f, 25 * 0.01f);
-	//	PRIVATE()->TextFillShape->setFillColor({ getBrush().Color.R, getBrush().Color.G, getBrush().Color.B, getBrush().Color.A });
-	//	PRIVATE()->Context->fillElement(PRIVATE()->TextFillShape);
-	//}
-	//if (PRIVATE()->Pen.Style != UIPen::NoPen)
-	//{
-	//	auto shape = VGNew<VGText>();
-	//	shape->setText(x, y, width, height, text);
-	//	shape->setLineWidth(getPen().Width);
-	//	shape->setStrokeColor({ getPen().Color.R, getPen().Color.G, getPen().Color.B, getPen().Color.A });
-	//	PRIVATE()->Context->strokeElement(shape);
-	//}
+	if (PRIVATE()->Brush.Style != UIBrush::NoBrush)
+	{
+		auto& font = PRIVATE()->Font;
+
+		VGText shape;
+		shape.setSize(font.Size);
+		shape.setFamily(font.Family);
+		shape.setSpacing(font.Spacing);
+		shape.setLineWrap(font.LineWrap);
+		shape.setLineSpacing(font.LineSpacing);
+		auto color = getBrush().Color;
+		shape.setFillColor({ color.R, color.G, color.B, color.A });
+		auto scissor = PRIVATE()->Scissor;
+		shape.setScissor({ scissor.X, scissor.Y, scissor.W, scissor.H });
+		shape.setText(0, 0, width, height, text);
+
+		VGRect rect = { x, y, width, height };
+		VGRect _cursorRect;
+		VGTrueType::Measure(&shape, rect, text, cursor, &_cursorRect, rect);
+		int32_t text_width = rect.W, text_height = rect.H, baseline = 0;
+
+		if (font.Align & UIFont::AlignLeft) { rect.X = x; }
+		else if (font.Align & UIFont::AlignRight) { rect.X = x + width - text_width; }
+		else if (font.Align & UIFont::AlignCenter) { rect.X = x + std::round((width - text_width) * 0.5f); }
+		// else if (font.Align & UIFont::AlignJustify) { rect.X = x + baseline; }
+		else { rect.X = x; }
+
+		if (font.Align & UIFont::AlignTop) { rect.Y = y; }
+		else if (font.Align & UIFont::AlignBottom) { rect.Y = y + height - text_height; }
+		else if (font.Align & UIFont::AlignVCenter) { rect.Y = y + std::round((height - text_height) * 0.5f); }
+		// else if (font.Align & UIFont::AlignBaseline) { rect.Y = y + baseline; }
+		else { rect.Y = y; }
+
+		if (boundingRect) (*boundingRect) = UIRect{ rect.X, rect.Y, rect.W, rect.H };
+
+		if (cursorRect)
+		{
+			*cursorRect = { rect.X + _cursorRect.X, rect.Y + _cursorRect.Y, _cursorRect.W, _cursorRect.H };
+		}
+
+		shape.setRotate(0);
+		shape.setTranslate(rect.X, rect.Y);
+		shape.setScale(1, 1);
+		CONTEXT()->fillElement(&shape);
+	}
 }
 
 UIPen const& OpenUIPainter::getPen() const

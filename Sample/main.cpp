@@ -242,18 +242,17 @@ void sample(UIContextRef context, SDL_Window* window)
 		scroll->setFixedSize(300, 200);
 		scroll->setHorizontalValue(150);
 		scroll->setVerticallValue(150);
-		if (false)
+		//if (false)
 		{
 			auto label = UINew<UILabel>();
 			scroll->addElement(label);
-			label->setFixedSize(500, 500);
-			/*label->setScaledContents(UILabel::ScaleKeepRatio);
+			label->setFixedSize(300, 300);
+			label->setScaledContents(UILabel::ScaleKeepRatio);
 			int img_width, img_height, channels;
-			auto image_data = stbi_load("../../OpenUI.png", &img_width, &img_height, &channels, 4);
-			if (image_data) label->setPixmap({
-							(uint32_t)img_width, (uint32_t)img_height, (uint32_t)(img_width * 4),
-							UIArrayView<const uint8_t>(image_data, img_height * img_width * 4) });
-			stbi_image_free(image_data);*/
+			auto image_data = stbi_load("../../Pattern.png", &img_width, &img_height, &channels, 4);
+			if (image_data) label->setPixmap(UIImage{
+							(uint32_t)img_width, (uint32_t)img_height, (uint32_t)(img_width * 4), 0, image_data });
+			stbi_image_free(image_data);
 		}
 	}
 	//if (false)
@@ -264,22 +263,22 @@ void sample(UIContextRef context, SDL_Window* window)
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("龘齉鱻麤0");
+			button->setText("Button0");
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("龘齉鱻麤1");
+			button->setText("Button1");
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("龘齉鱻麤2");
+			button->setText("Button2");
 		}
 		{
 			auto button = UINew<UIButton>();
 			vbox->addElement(button);
-			button->setText("龘齉鱻麤3");
+			button->setText("Button3");
 		}
 	}
 	//if (false)
@@ -290,22 +289,22 @@ void sample(UIContextRef context, SDL_Window* window)
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("龘齉鱻麤0");
+			button->setText("Button0");
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("龘齉鱻麤1");
+			button->setText("Button1");
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("龘齉鱻麤2");
+			button->setText("Button2");
 		}
 		{
 			auto button = UINew<UIButton>();
 			hbox->addElement(button);
-			button->setText("龘齉鱻麤3");
+			button->setText("Button3");
 		}
 	}
 	//if (false)
@@ -318,22 +317,22 @@ void sample(UIContextRef context, SDL_Window* window)
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 0, 0, 2, 2);
-			button->setText("龘齉鱻麤0");
+			button->setText("Button0");
 		}
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 0, 2, 3, 1);
-			button->setText("龘齉鱻麤1");
+			button->setText("Button1");
 		}
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 2, 0, 1, 1);
-			button->setText("龘齉鱻麤2");
+			button->setText("Button2");
 		}
 		{
 			auto button = UINew<UIButton>();
 			grid->addElement(button, 2, 1, 1, 1);
-			button->setText("龘齉鱻麤3");
+			button->setText("Button3");
 		}
 	}
 	//if (false)
@@ -386,7 +385,7 @@ void sample(UIContextRef context, SDL_Window* window)
 		auto button = UINew<UIButton>();
 		layout->addElement(button);
 		button->setFixedSize(100, 30);
-		button->setText("龘齉鱻麤");
+		button->setText("Button");
 	}
 	//if (false)
 	{
