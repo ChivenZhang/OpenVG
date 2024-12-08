@@ -7,13 +7,13 @@ OpenUIRender::OpenUIRender()
 	auto vsource = R"(
 		#version 450
 		layout (location = 0) in vec2 _point;
-		layout (location = 1) in uint _image;
+		layout (location = 1) in uint _index;
 		out vec2 uv;
-		flat out uint image;
+		flat out uint index;
 
 		void main()
 		{
-			image = _image;
+			index = _index;
 			uv = vec2(_point.x, 1.0-_point.y);
 			gl_Position = vec4(2*_point-1, 0.0, 1.0);
 		}
@@ -22,13 +22,13 @@ OpenUIRender::OpenUIRender()
 	auto fsource = R"(
 		#version 450
 		in vec2 uv;
-		flat in uint image;
+		flat in uint index;
 		layout (location = 0) out vec4 color;
 		layout (binding = 0) uniform sampler2D textureList[16];
 
 		void main()
 		{
-			color = texture(textureList[image], uv);
+			color = texture(textureList[index], uv);
 		}
 	)";
 
@@ -42,9 +42,8 @@ OpenUIRender::OpenUIRender()
 	{
 		GLchar infoLog[512];
 		glGetShaderInfoLog(vshader, 512, NULL, infoLog);
-		UIFatal("Shader compilation failed: %s", (const char*)infoLog);
 		glDeleteShader(vshader); // 删除着色器，防止内存泄漏  
-		::exit(-1);
+		UI_FATAL("Shader compilation failed: %s", infoLog);
 	}
 
 	// 检查编译错误 
@@ -56,9 +55,8 @@ OpenUIRender::OpenUIRender()
 	{
 		GLchar infoLog[512];
 		glGetShaderInfoLog(fshader, 512, NULL, infoLog);
-		UIFatal("Shader compilation failed: %s", (const char*)infoLog);
 		glDeleteShader(fshader); // 删除着色器，防止内存泄漏  
-		::exit(-1);
+		UI_FATAL("Shader compilation failed: %s", infoLog);
 	}
 
 	// 检查链接错误  
@@ -71,9 +69,8 @@ OpenUIRender::OpenUIRender()
 	{
 		GLchar infoLog[512];
 		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		UIFatal("Shader program linking failed: %s", (const char*)infoLog);
 		glDeleteProgram(shaderProgram); // 删除程序，防止内存泄漏  
-		::exit(-1);
+		UI_FATAL("Shader program linking failed: %s", infoLog);
 	}
 	glDeleteShader(vshader);
 	glDeleteShader(fshader);
@@ -94,10 +91,8 @@ OpenUIRender::OpenUIRender()
 	// 4. 设置顶点属性指针 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, X));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, Image));
+	glVertexAttribPointer(1, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(primitive_t), (void*)offsetof(primitive_t, Index));
 	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
 	m_NativePrimitive = vao;

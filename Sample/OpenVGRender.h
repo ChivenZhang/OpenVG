@@ -30,8 +30,6 @@ public:
 	texture_t getTexture(VGImage image, bool glyph = false);
 
 protected:
-
-protected:
 	context_t m_FontStashTexture;
 	VGMap<VGImage, context_t> m_ImageTextureMap;
 	VGMap<VGImage, context_t> m_GlyphTextureMap;

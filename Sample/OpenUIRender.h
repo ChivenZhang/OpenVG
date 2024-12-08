@@ -7,7 +7,7 @@ public:
 	using primitive_t = struct primitive_t
 	{
 		float X = 0, Y = 0;
-		uint32_t Image = 0;
+		uint32_t Index = 0;
 	};
 
 public:
@@ -19,5 +19,5 @@ protected:
 	uint32_t m_NativeProgram;
 	uint32_t m_NativeBuffer;
 	uint32_t m_NativePrimitive;
-	UIVector<primitive_t> m_PrimitiveList;
+	UIList<primitive_t> m_PrimitiveList;
 };
