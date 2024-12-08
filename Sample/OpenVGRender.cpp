@@ -1,3 +1,13 @@
+/*=================================================
+* Copyright © 2020-2025 ChivenZhang.
+* All Rights Reserved.
+* =====================Note=========================
+*
+*
+* ====================History=======================
+* Created by ChivenZhang@gmail.com.
+*
+* =================================================*/
 #include "OpenVGRender.h"
 #include <GL/glew.h>
 #define STB_RECT_PACK_IMPLEMENTATION
