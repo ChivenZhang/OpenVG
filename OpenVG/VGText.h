@@ -28,7 +28,7 @@ public:
 
 	float getDashOffset() const;
 	VGArrayView<const float> getLineDash() const;
-	void setLineDash(VGVector<float> value, float offset = 0);
+	void setLineDash(VGList<float> value, float offset = 0);
 
 	VGString getFamily() const;
 	void setFamily(VGString value);

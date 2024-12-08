@@ -115,7 +115,7 @@ VGArrayView<const float> VGText::getLineDash() const
 	return PRIVATE()->StrokeStyle->DashControl;
 }
 
-void VGText::setLineDash(VGVector<float> value, float offset)
+void VGText::setLineDash(VGList<float> value, float offset)
 {
 	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->DashControl = value;

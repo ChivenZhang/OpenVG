@@ -22,7 +22,7 @@ struct VGStrokeStyle
 	float LineWidth = 1;
 	float MiterLimit = 4;
 	float DashOffset = 0;
-	VGVector<float> DashControl;
+	VGList<float> DashControl;
 };
 using VGStrokeStyleRef = VGRef<VGStrokeStyle>;
 using VGStrokeStyleRaw = VGRaw<VGStrokeStyle>;

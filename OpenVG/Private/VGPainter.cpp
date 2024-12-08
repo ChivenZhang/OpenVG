@@ -5,7 +5,7 @@
 class VGPainterPrivateData : public VGPainterPrivate
 {
 public:
-	VGVector<VGPrimitive> PrimitiveList;
+	VGList<VGPrimitive> PrimitiveList;
 };
 #define PRIVATE() ((VGPainterPrivateData*) m_Private)
 
@@ -49,12 +49,12 @@ void VGPainter::stroke(VGElementRaw element)
 	matrix.Transform = VGFloat3x3::Transform(element->getTranslate().X, element->getTranslate().Y, element->getRotate(), element->getScale().X, element->getScale().Y);
 }
 
-VGVector<VGPrimitive>& VGPainter::getPrimitiveList()
+VGList<VGPrimitive>& VGPainter::getPrimitiveList()
 {
 	return PRIVATE()->PrimitiveList;
 }
 
-VGVector<VGPrimitive> const& VGPainter::getPrimitives() const
+VGList<VGPrimitive> const& VGPainter::getPrimitives() const
 {
 	return PRIVATE()->PrimitiveList;
 }

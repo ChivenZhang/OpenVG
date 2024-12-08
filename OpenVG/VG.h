@@ -1,8 +1,19 @@
 ﻿#pragma once
+/*=================================================
+* Copyright © 2020-2024 ChivenZhang.
+* All Rights Reserved.
+* =====================Note=========================
+*
+*
+* ====================History=======================
+* Created by ChivenZhang@gmail.com.
+*
+* =================================================*/
 
 #if defined( _MSVC_LANG )
 #	define OPENVG_CPLUSPLUS _MSVC_LANG
 #else
+#	define __FUNCTION__ __func__
 #	define OPENVG_CPLUSPLUS __cplusplus
 #endif
 #if 201703L < OPENVG_CPLUSPLUS
@@ -14,7 +25,10 @@
 #elif 199711L < OPENVG_CPLUSPLUS
 #	define OPENVG_CPP_VERSION 11
 #else
-#	error "At least c++ standard version 11"
+#	define OPENVG_CPP_VERSION 0
+#endif
+#if OPENVG_CPP_VERSION < 17
+#	error "At least c++ standard version 17"
 #endif
 
 // ============================================
@@ -33,49 +47,14 @@
 #		define OPENVG_C_API extern "C" 
 #	else
 #		define OPENVG_API 
-#		define OPENVG_C_API 
+#		define OPENVG_C_API extern "C"
 #	endif
 #endif
-
-// ============================================
 
 #ifdef _WIN32
-#	define OPENVG_PLATFORM_WINDOWS
-#elif defined(__APPLE__)
-#	define OPENVG_PLATFORM_APPLE
-#	if defined(TARGET_OS_OSX)
-#		define OPENVG_PLATFORM_MACOS
-#	elif defined(TARGET_OS_IPHONE)
-#		define OPENVG_PLATFORM_IPHONE
-#	endif
-#elif defined(__ANDROID__)
-#	define OPENVG_PLATFORM_ANDROID
-#elif defined(__FreeBSD__)
-#	define OPENVG_PLATFORM_FREEBSD
-#elif defined(__NetBSD__)
-#	define OPENVG_PLATFORM_NETBSD
-#elif defined(__sun)
-#	define OPENVG_PLATFORM_SOLARIS
-#elif defined(__linux__) || defined(__linux)
-#	define OPENVG_PLATFORM_LINUX
-#elif defined(__unix__) || defined(__unix)
-#	define OPENVG_PLATFORM_UNIX
-#endif
-
-#if defined(_WIN64) || defined(__x86_64__)
-#	define OPENVG_PLATFORM_64
-#elif defined(_WIN32) || defined(__i386__)
-#	define OPENVG_PLATFORM_32
-#endif
-
-#ifdef OPENVG_PLATFORM_WINDOWS
 #	ifdef _DEBUG
 #		define OPENVG_DEBUG_MODE
 #	endif
-#endif
-
-#ifndef OPENVG_OPENGL
-	// Other Backend
 #endif
 
 // ============================================
@@ -91,33 +70,79 @@
 #pragma warning(disable:26816)
 
 #define _USE_MATH_DEFINES
-#include <math.h>
-#include <assert.h>
-#include <iostream>
-#include <utility>
 #include <algorithm>
-#include <sstream>
-#include <memory>
-#include <string>
+#include <any>
 #include <array>
-#if 20 <= OPENVG_CPP_VERSION
-#include <span>
-#else
-#include <Utility/span.h>
-#endif
-#include <vector>
-#include <deque>
-#include <list>
-#include <set>
-#include <unordered_set>
-#include <map>
-#include <unordered_map>
-#include <queue>
-#include <stack>
+#include <atomic>
 #include <bitset>
+#include <condition_variable>
+#include <deque>
 #include <exception>
 #include <functional>
-#define VGNAN (NAN)
+#include <future>
+#include <iostream>
+#include <list>
+#include <map>
+#include <math.h>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <set>
+#include <span>
+#include <sstream>
+#include <stack>
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+// ============================================
+
+#include <assert.h>
+#define VGAssert(...) assert(__VA_ARGS__)
+
+// ============================================
+
+#include <cstdio>
+#include <ctime>
+#include <thread>
+#define VG_FORMAT(TARGET, FORMAT, LEVEL, ...) \
+do { \
+char __DATETIME__[32]; auto __NOWTIME__ = std::time(nullptr); \
+std::strftime(__DATETIME__, sizeof(__DATETIME__), "%Y-%m-%d %H:%M:%S", std::localtime(&__NOWTIME__)); \
+auto __THREAD__ = []()->uint32_t { std::stringstream ss; ss << std::this_thread::get_id(); return std::stoul(ss.str()); }(); \
+std::fprintf(TARGET, "%s:%d\n" "%s " #LEVEL " %d --- " FORMAT "\n\n", __FILE__, __LINE__, __DATETIME__, __THREAD__, ##__VA_ARGS__); \
+} while (0)
+
+#ifndef VG_DEBUG
+#ifdef OPENVG_DEBUG_MODE
+#	define VG_DEBUG(FORMAT, ...) VG_FORMAT(stdout, FORMAT, DEBUG, ##__VA_ARGS__)
+#else
+#	define VG_DEBUG(FORMAT, ...)
+#endif
+#endif
+
+#ifndef VG_WARN
+#	define VG_WARN(FORMAT, ...) VG_FORMAT(stdout, FORMAT, WARN, ##__VA_ARGS__)
+#endif
+
+#ifndef VG_INFO
+#	define VG_INFO(FORMAT, ...) VG_FORMAT(stdout, FORMAT, INFO, ##__VA_ARGS__)
+#endif
+
+#ifndef VG_ERROR
+#	define VG_ERROR(FORMAT, ...) VG_FORMAT(stderr, FORMAT, ERROR, ##__VA_ARGS__)
+#endif
+
+#ifndef VG_FATAL
+#	define VG_FATAL(FORMAT, ...) do{ VG_FORMAT(stderr, FORMAT, FATAL, ##__VA_ARGS__); std::abort(); } while(0)
+#endif
+
+#ifndef VG_PRINT
+#	define VG_PRINT(FORMAT, ...) VG_INFO(FORMAT, ##__VA_ARGS__)
+#endif
 
 // ============================================
 
@@ -125,35 +150,37 @@ template<class T>
 using VGRaw = T*;
 template<class T>
 using VGRef = std::shared_ptr<T>;
+template<class T>
+using VGHnd = std::weak_ptr<T>;
 using VGString = std::string;
 using VGCString = const char*;
 using VGWString = std::wstring;
 #if 20 <= OPENVG_CPP_VERSION
 using VGString8 = std::u8string;
-#else
-using VGString8 = std::string;
 #endif
 using VGString16 = std::u16string;
 using VGString32 = std::u32string;
+#if 17 <= OPENVG_CPP_VERSION
 using VGStringView = std::string_view;
 using VGWStringView = std::wstring_view;
-#if 20 <= OPENVG_CPP_VERSION
-using VGString8View = std::u8string_view;
-#else
-using VGString8View = std::string_view;
-#endif
 using VGString16View = std::u16string_view;
 using VGString32View = std::u32string_view;
+#endif
+#if 20 <= OPENVG_CPP_VERSION
+using VGString8View = std::u8string_view;
+#endif
 template <class T, size_t N>
 using VGArray = std::array<T, N>;
+#if 20 <= OPENVG_CPP_VERSION
 template <class T, size_t N = std::dynamic_extent>
 using VGArrayView = std::span<T, N>;
+#endif
 template <class T>
-using VGVector = std::vector<T>;
+using VGList = std::vector<T>;
 template <class T>
 using VGDeque = std::deque<T>;
 template <class T>
-using VGList = std::list<T>;
+using VGLinkedList = std::list<T>;
 template <class T, class L = std::less<T>>
 using VGSet = std::set<T, L>;
 template <class K, class T, class L = std::less<K>>
@@ -168,8 +195,8 @@ template <class K, class T, class H = std::hash<K>, class E = std::equal_to<K>>
 using VGHashMap = std::unordered_map<K, T, H, E>;
 template <class T>
 using VGQueue = std::queue<T>;
-template <class T, class C = VGVector<T>, class L = std::less<typename C::value_type>>
-using VGPriorityQueue = std::priority_queue<T, C, L>;
+template <class T, class C = VGList<T>, class L = std::less<typename C::value_type>>
+using VGSortedQueue = std::priority_queue<T, C, L>;
 template <class T>
 using VGStack = std::stack<T>;
 template <size_t N>
@@ -178,20 +205,36 @@ template <class T, class U>
 using VGBinary = std::pair<T, U>;
 template <class ...TS>
 using VGTuple = std::tuple<TS...>;
-using VGException = std::exception;
+using VGAny = std::any;
+using VGError = std::exception;
 template <class T>
 using VGLambda = std::function<T>;
-using VGStringList = VGVector<VGString>;
-using VGWStringList = VGVector<VGWString>;
-using VGString8List = VGVector<VGString8>;
-using VGString16List = VGVector<VGString16>;
-using VGString32List = VGVector<VGString32>;
+using VGThread = std::thread;
+template <class T>
+using VGFuture = std::future<T>;
+template <class T>
+using VGPromise = std::promise<T>;
+template <class T>
+using VGAtomic = std::atomic<T>;
+using VGMutex = std::recursive_mutex;
+using VGMutexLock = std::lock_guard<VGMutex>;
+using VGUniqueLock = std::unique_lock<VGMutex>;
+using VGMutexUnlock = std::condition_variable_any;
+using VGStringList = VGList<VGString>;
+using VGWStringList = VGList<VGWString>;
+#if 20 <= OPENVG_CPP_VERSION
+using VGString8List = VGList<VGString8>;
+#endif
+using VGString16List = VGList<VGString16>;
+using VGString32List = VGList<VGString32>;
 template<class T>
 using VGStringMap = VGMap<VGString, T>;
 template<class T>
 using VGWStringMap = VGMap<VGWString, T>;
+#if 20 <= OPENVG_CPP_VERSION
 template<class T>
 using VGString8Map = VGMap<VGString8, T>;
+#endif
 template<class T>
 using VGString16Map = VGMap<VGString16, T>;
 template<class T>
@@ -200,29 +243,14 @@ template<class T>
 using VGStringHashMap = VGHashMap<VGString, T>;
 template<class T>
 using VGWStringHashMap = VGHashMap<VGWString, T>;
+#if 20 <= OPENVG_CPP_VERSION
 template<class T>
 using VGString8HashMap = VGHashMap<VGString8, T>;
+#endif
 template<class T>
 using VGString16HashMap = VGHashMap<VGString16, T>;
 template<class T>
 using VGString32HashMap = VGHashMap<VGString32, T>;
-
-// ============================================
-
-#include <time.h>
-#define VGPrint(FORMAT, ...) do{ fprintf(stdout, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "INFO", __VA_ARGS__); }while(0)
-#define VGError(FORMAT, ...) do{ fprintf(stderr, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "ERROR", __VA_ARGS__); }while(0)
-#define VGFatal(FORMAT, ...) do{ fprintf(stderr, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "FATAL", __VA_ARGS__); exit(1); }while(0)
-#ifdef OPENVG_DEBUG_MODE
-#define VGDebug(FORMAT, ...) do{ fprintf(stdout, "%s(%d)\n%.3f s\t[%s]\t" FORMAT "\n\n", __FILE__, __LINE__, ::clock()*0.001f, "DEBUG", __VA_ARGS__); }while(0)
-#else													
-#define VGDebug(FORMAT, ...)
-#endif
-
-#define VGPRINT VGPrint
-#define VGERROR VGError
-#define VGFATAL VGFatal
-#define VGDEBUG VGDebug
 
 // ============================================
 
@@ -244,6 +272,18 @@ inline VGRef<U> VGCast(VGRef<T> const& target)
 	return std::dynamic_pointer_cast<U>(target);
 }
 template<typename U, typename T>
+inline VGHnd<U> VGCast(VGHnd<T>&& target)
+{
+	if (target == nullptr) return THnd<U>();
+	return std::dynamic_pointer_cast<U>(target.lock());
+}
+template<typename U, typename T>
+inline VGHnd<U> VGCast(VGHnd<T> const& target)
+{
+	if (target == nullptr) return THnd<U>();
+	return std::dynamic_pointer_cast<U>(target.lock());
+}
+template<typename U, typename T>
 inline VGRaw<U> VGCast(VGRaw<T>&& target)
 {
 	if (target == nullptr) return nullptr;
@@ -256,15 +296,55 @@ inline VGRaw<U> VGCast(VGRaw<T> const& target)
 	return const_cast<U*>(dynamic_cast<const U*>((const T*)target));
 }
 
-inline constexpr uint32_t VGHash(VGCString value)
+inline constexpr uint32_t VGHash32(const char* const first, const size_t count) noexcept
 {
-	uint32_t hash = 0; // From JDK 8
-	if (value == nullptr) return hash;
-	while (*value) hash = hash * 31 + (*value++);
-	return hash;
+	// These FNV-1a utility functions are extremely performance sensitive,
+	// check examples like that in VSO-653642 before making changes.
+	constexpr uint32_t _FNV_offset_basis = 2166136261U;
+	constexpr uint32_t _FNV_prime = 16777619U;
+	auto result = _FNV_offset_basis;
+	// accumulate range [_First, _First + _Count) into partial FNV-1a hash _Val
+	for (size_t i = 0; i < count; ++i)
+	{
+		result ^= (uint32_t)first[i];
+		result *= _FNV_prime;
+	}
+	return result;
 }
+inline constexpr uint64_t VGHash64(const char* const first, const size_t count) noexcept
+{
+	// These FNV-1a utility functions are extremely performance sensitive,
+	// check examples like that in VSO-653642 before making changes.
+	constexpr uint64_t _FNV_offset_basis = 14695981039346656037ULL;
+	constexpr uint64_t _FNV_prime = 1099511628211ULL;
+	auto result = _FNV_offset_basis;
+	// accumulate range [_First, _First + _Count) into partial FNV-1a hash _Val
+	for (size_t i = 0; i < count; ++i)
+	{
+		result ^= (uint64_t)first[i];
+		result *= _FNV_prime;
+	}
+	return result;
+}
+inline constexpr uint32_t VGHash(const char* const value) noexcept
+{
+	size_t count = 0; for (size_t i = 0; value[i]; ++i) ++count;
+	return VGHash32(value, count);
+}
+inline const uint32_t VGHash(VGString const& value) noexcept
+{
+	return VGHash32(value.c_str(), value.size());
+}
+#if 17 <= OPENVG_CPP_VERSION
+inline const uint32_t VGHash(VGStringView value) noexcept
+{
+	return VGHash32(value.data(), value.size());
+}
+#endif
 
 // ============================================
+
+#define VGNAN (NAN)
 
 #define VG_MATH_PI  3.14159265358979323846f
 
@@ -600,13 +680,13 @@ struct VGPrimitive
 	using image_t = VGImage;
 	using scissor_t = VGRect;
 
-	VGVector<point_t> PointList;
-	VGVector<style_t> StyleList;
-	VGVector<image_t> ImageList;
-	VGVector<linear_t> LinearList;
-	VGVector<radial_t> RadialList;
-	VGVector<matrix_t> MatrixList;
-	VGVector<scissor_t> ScissorList;
+	VGList<point_t> PointList;
+	VGList<style_t> StyleList;
+	VGList<image_t> ImageList;
+	VGList<linear_t> LinearList;
+	VGList<radial_t> RadialList;
+	VGList<matrix_t> MatrixList;
+	VGList<scissor_t> ScissorList;
 };
 using VGPrimitiveRaw = VGRaw<VGPrimitive>;
 using VGPrimitiveRef = VGRef<VGPrimitive>;

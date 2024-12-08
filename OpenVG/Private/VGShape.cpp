@@ -6,8 +6,8 @@ class VGShapePrivate : public VGElementPrivate
 public:
 	VGFillStyleRef FillStyle;
 	VGStrokeStyleRef StrokeStyle;
-	VGVector<VGPoint> PointList;
-	VGVector<VGPointType> PointTypeList;
+	VGList<VGPoint> PointList;
+	VGList<VGPointType> PointTypeList;
 };
 #define PRIVATE() ((VGShapePrivate*) m_Private)
 
@@ -105,7 +105,7 @@ VGArrayView<const float> VGShape::getLineDash() const
 	return PRIVATE()->StrokeStyle->DashControl;
 }
 
-void VGShape::setLineDash(VGVector<float> value, float offset)
+void VGShape::setLineDash(VGList<float> value, float offset)
 {
 	if (PRIVATE()->StrokeStyle == nullptr) PRIVATE()->StrokeStyle = VGNew<VGStrokeStyle>();
 	PRIVATE()->StrokeStyle->DashControl = value;

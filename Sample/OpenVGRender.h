@@ -54,10 +54,10 @@ protected:
 	uint32_t m_NativePrimitive;
 	size_t m_PrimitiveIndex = 0;
 
-	VGVector<VGPrimitive::point_t> m_PointList;
-	VGVector<VGPrimitive::style_t> m_StyleList;
-	VGVector<VGPrimitive::linear_t> m_LinearList;
-	VGVector<VGPrimitive::radial_t> m_RadialList;
-	VGVector<VGPrimitive::matrix_t> m_MatrixList;
-	VGVector<OpenVGTextures::texture_t> m_TextureList;
+	VGList<VGPrimitive::point_t> m_PointList;
+	VGList<VGPrimitive::style_t> m_StyleList;
+	VGList<VGPrimitive::linear_t> m_LinearList;
+	VGList<VGPrimitive::radial_t> m_RadialList;
+	VGList<VGPrimitive::matrix_t> m_MatrixList;
+	VGList<OpenVGTextures::texture_t> m_TextureList;
 };

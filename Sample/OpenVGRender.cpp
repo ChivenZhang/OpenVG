@@ -440,15 +440,15 @@ OpenVGTextures::texture_t OpenVGTextures::getTexture(VGImage image, bool glyph)
 		if (result == m_GlyphTextureMap.end())
 		{
 			result = m_GlyphTextureMap.emplace(image, context_t{ m_FontStashTexture.Texture, 0, 0, 0, image.Width, image.Height }).first;
-			VGVector<VGRaw<context_t>> textureList;
-			VGVector<VGRaw<const VGImage>> imageList;
+			VGList<VGRaw<context_t>> textureList;
+			VGList<VGRaw<const VGImage>> imageList;
 			for (auto& e : m_GlyphTextureMap)
 			{
 				imageList.push_back(&e.first);
 				textureList.push_back(&e.second);
 			}
 
-			VGVector<stbrp_rect> rects;
+			VGList<stbrp_rect> rects;
 			for (size_t i = 0; i < textureList.size(); ++i)
 			{
 				auto& texture = textureList[i];

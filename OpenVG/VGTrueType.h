@@ -9,7 +9,7 @@ public:
 	using image_t = VGImage;
 
 public:
-	static bool Path(VGTextRaw element, VGRect rect, VGString const& text, VGVector<VGPoint>& points, VGVector<VGPointType>& types);
+	static bool Path(VGTextRaw element, VGRect rect, VGString const& text, VGList<VGPoint>& points, VGList<VGPointType>& types);
 
 	static bool Fill(VGTextRaw element, VGRect client, VGString const& text, VGPrimitiveRaw result);
 

@@ -9,7 +9,7 @@ public:
 
 	virtual VGArrayView<VGColorStop> getColorStop() const = 0;
 
-	virtual void setColorStop(VGVector<VGColorStop> value) = 0;
+	virtual void setColorStop(VGList<VGColorStop> value) = 0;
 };
 using VGGradientRaw = VGRaw<VGGradient>;
 using VGGradientRef = VGRef<VGGradient>;

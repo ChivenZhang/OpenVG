@@ -7,96 +7,6 @@
 #include <freetype/ftbitmap.h>
 #include <fontconfig/fontconfig.h>
 
-#ifdef OPENVG_PLATFORM_WINDOWS
-#ifdef OPENVG_DEBUG_MODE
-#pragma comment(lib, "bentleyottmann.lib")
-#pragma comment(lib, "brotlicommon.lib")
-#pragma comment(lib, "brotlidec.lib")
-#pragma comment(lib, "brotlienc.lib")
-#pragma comment(lib, "bz2d.lib")
-#pragma comment(lib, "charset.lib")
-#pragma comment(lib, "fontconfig.lib")
-#pragma comment(lib, "freetyped.lib")
-#pragma comment(lib, "fribidi.lib")
-#pragma comment(lib, "getopt.lib")
-#pragma comment(lib, "GlU32.Lib")
-#pragma comment(lib, "harfbuzz.lib")
-#pragma comment(lib, "harfbuzz-subset.lib")
-#pragma comment(lib, "iconv.lib")
-#pragma comment(lib, "icudtd.lib")
-#pragma comment(lib, "icuind.lib")
-#pragma comment(lib, "icuiod.lib")
-#pragma comment(lib, "icuucd.lib")
-#pragma comment(lib, "intl.lib")
-#pragma comment(lib, "jpeg.lib")
-#pragma comment(lib, "libexpatdMD.lib")
-#pragma comment(lib, "libpng16d.lib")
-#pragma comment(lib, "libsharpyuv.lib")
-#pragma comment(lib, "libwebp.lib")
-#pragma comment(lib, "libwebpdecoder.lib")
-#pragma comment(lib, "libwebpdemux.lib")
-#pragma comment(lib, "libwebpmux.lib")
-#pragma comment(lib, "OpenGL32.Lib")
-#pragma comment(lib, "pthreadVC3d.lib")
-#pragma comment(lib, "pthreadVCE3d.lib")
-#pragma comment(lib, "pthreadVSE3d.lib")
-#pragma comment(lib, "raqm.lib")
-#pragma comment(lib, "skia.lib")
-#pragma comment(lib, "skottie.lib")
-#pragma comment(lib, "skparagraph.lib")
-#pragma comment(lib, "sksg.lib")
-#pragma comment(lib, "skshaper.lib")
-#pragma comment(lib, "skunicode_core.lib")
-#pragma comment(lib, "skunicode_icu.lib")
-#pragma comment(lib, "svg.lib")
-#pragma comment(lib, "turbojpeg.lib")
-#pragma comment(lib, "zlibd.lib")
-#else
-#pragma comment(lib, "bentleyottmann.lib")
-#pragma comment(lib, "brotlicommon.lib")
-#pragma comment(lib, "brotlidec.lib")
-#pragma comment(lib, "brotlienc.lib")
-#pragma comment(lib, "bz2.lib")
-#pragma comment(lib, "charset.lib")
-#pragma comment(lib, "fontconfig.lib")
-#pragma comment(lib, "freetype.lib")
-#pragma comment(lib, "fribidi.lib")
-#pragma comment(lib, "getopt.lib")
-#pragma comment(lib, "GlU32.Lib")
-#pragma comment(lib, "harfbuzz.lib")
-#pragma comment(lib, "harfbuzz-subset.lib")
-#pragma comment(lib, "iconv.lib")
-#pragma comment(lib, "icudt.lib")
-#pragma comment(lib, "icuin.lib")
-#pragma comment(lib, "icuio.lib")
-#pragma comment(lib, "icuuc.lib")
-#pragma comment(lib, "intl.lib")
-#pragma comment(lib, "jpeg.lib")
-#pragma comment(lib, "libexpatMD.lib")
-#pragma comment(lib, "libpng16.lib")
-#pragma comment(lib, "libsharpyuv.lib")
-#pragma comment(lib, "libwebp.lib")
-#pragma comment(lib, "libwebpdecoder.lib")
-#pragma comment(lib, "libwebpdemux.lib")
-#pragma comment(lib, "libwebpmux.lib")
-#pragma comment(lib, "OpenGL32.Lib")
-#pragma comment(lib, "pthreadVC3.lib")
-#pragma comment(lib, "pthreadVCE3.lib")
-#pragma comment(lib, "pthreadVSE3.lib")
-#pragma comment(lib, "raqm.lib")
-#pragma comment(lib, "skia.lib")
-#pragma comment(lib, "skottie.lib")
-#pragma comment(lib, "skparagraph.lib")
-#pragma comment(lib, "sksg.lib")
-#pragma comment(lib, "skshaper.lib")
-#pragma comment(lib, "skunicode_core.lib")
-#pragma comment(lib, "skunicode_icu.lib")
-#pragma comment(lib, "svg.lib")
-#pragma comment(lib, "turbojpeg.lib")
-#pragma comment(lib, "zlib.lib")
-#endif
-#endif
-
 static struct USING_FONTCONFIG
 {
 	USING_FONTCONFIG() { FcInit(); }
@@ -128,7 +38,7 @@ struct VGFontHash
 };
 static VGMap<VGFontHash, VGString> s_FontFileMap;
 
-static auto split_func = [](const std::string& s, char delimiter)->VGVector<VGString> {
+static auto split_func = [](const std::string& s, char delimiter)->VGList<VGString> {
 	std::vector<std::string> tokens;
 	std::string token;
 	std::size_t start = 0;
@@ -192,7 +102,7 @@ static auto config_func = [](VGTextRaw element, VGString font)->VGString {
 	return filePath;
 	};
 
-bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString const& text, VGVector<VGPoint>& inPoints, VGVector<VGPointType>& inTypes)
+bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString const& text, VGList<VGPoint>& inPoints, VGList<VGPointType>& inTypes)
 {
 	struct VGTextHash
 	{
@@ -211,8 +121,8 @@ bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString const& text, VGVe
 	};
 	struct VGTextGlygh
 	{
-		VGVector<VGPoint> Points;
-		VGVector<VGPointType> Types;
+		VGList<VGPoint> Points;
+		VGList<VGPointType> Types;
 	};
 	static VGMap<VGTextHash, VGRef<VGTextGlygh>> s_FontGlyphMap;
 
@@ -300,13 +210,13 @@ bool VGTrueType::Path(VGTextRaw element, VGRect rect, VGString const& text, VGVe
 
 						struct VGTextGlygh2
 						{
-							VGVector<VGPoint>* Points;
-							VGVector<VGPointType>* Types;
+							VGList<VGPoint>* Points;
+							VGList<VGPointType>* Types;
 						} input;
 
 						// Step 6: Process the outline
-						VGVector<VGPoint> newPoints;
-						VGVector<VGPointType> newTypes;
+						VGList<VGPoint> newPoints;
+						VGList<VGPointType> newTypes;
 
 						input.Points = &newPoints;
 						input.Types = &newTypes;
@@ -415,7 +325,7 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 		struct image_t
 		{
 			uint32_t Width, Height, Stride, OffsetX, OffsetY;
-			VGVector<uint8_t> Pixel;
+			VGList<uint8_t> Pixel;
 		};
 
 		bool operator < (VGTextHash const& e) const
@@ -431,7 +341,7 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 	auto& outStyles = result->StyleList;
 	auto& outImages = result->ImageList;
 
-	VGVector<FT_Face> faceList;
+	VGList<FT_Face> faceList;
 	auto fontList = split_func(element->getFamily(), ',');
 	for (size_t i = 0; i < fontList.size(); ++i)
 	{
@@ -466,7 +376,7 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 		VGCString Script = nullptr;
 		size_t Start = 0, Count = 0;
 	};
-	VGVector<bidirun_t> runList;
+	VGList<bidirun_t> runList;
 
 	auto bidi = ubidi_open();
 	do
@@ -744,7 +654,7 @@ bool VGTrueType::Stroke(VGTextRaw element, VGRect client, VGString const& text, 
 
 bool VGTrueType::Measure(VGTextRaw element, VGRect client, VGString const& text, float cursor, VGRect* cursorRect, VGRect& result)
 {
-	VGVector<FT_Face> faceList;
+	VGList<FT_Face> faceList;
 	auto fontList = split_func(element->getFamily(), ',');
 	for (size_t i = 0; i < fontList.size(); ++i)
 	{
@@ -779,7 +689,7 @@ bool VGTrueType::Measure(VGTextRaw element, VGRect client, VGString const& text,
 		VGCString Script = nullptr;
 		size_t Start = 0, Count = 0;
 	};
-	VGVector<bidirun_t> runList;
+	VGList<bidirun_t> runList;
 	auto bidi = ubidi_open();
 	do
 	{
@@ -891,7 +801,7 @@ bool VGTrueType::Measure(VGTextRaw element, VGRect client, VGString const& text,
 
 bool VGTrueType::Measure(VGTextRaw element, VGRect client, VGString const& text, float posX, float posY, float* cursor, VGRect* cursorRect, VGRect& result)
 {
-	VGVector<FT_Face> faceList;
+	VGList<FT_Face> faceList;
 	auto fontList = split_func(element->getFamily(), ',');
 	for (size_t i = 0; i < fontList.size(); ++i)
 	{
@@ -926,7 +836,7 @@ bool VGTrueType::Measure(VGTextRaw element, VGRect client, VGString const& text,
 		VGCString Script = nullptr;
 		size_t Start = 0, Count = 0;
 	};
-	VGVector<bidirun_t> runList;
+	VGList<bidirun_t> runList;
 	auto bidi = ubidi_open();
 	do
 	{
