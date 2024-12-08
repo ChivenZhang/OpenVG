@@ -1,3 +1,13 @@
+/*=================================================
+* Copyright © 2020-2025 ChivenZhang.
+* All Rights Reserved.
+* =====================Note=========================
+*
+*
+* ====================History=======================
+* Created by ChivenZhang@gmail.com.
+*
+* =================================================*/
 #include "OpenVGRender.h"
 #include <GL/glew.h>
 #define STB_RECT_PACK_IMPLEMENTATION
@@ -134,9 +144,8 @@ OpenVGRender::OpenVGRender()
 	{
 		GLchar infoLog[512];
 		glGetShaderInfoLog(vshader, 512, NULL, infoLog);
-		std::cerr << "Shader compilation failed: " << infoLog << std::endl;
 		glDeleteShader(vshader); // 删除着色器，防止内存泄漏  
-		::exit(-1);
+		VG_FATAL("Shader compilation failed: %s", infoLog);
 	}
 
 	// 检查编译错误 
@@ -149,9 +158,8 @@ OpenVGRender::OpenVGRender()
 	{
 		GLchar infoLog[512];
 		glGetShaderInfoLog(fshader, 512, NULL, infoLog);
-		std::cerr << "Shader compilation failed: " << infoLog << std::endl;
 		glDeleteShader(fshader); // 删除着色器，防止内存泄漏  
-		::exit(-1);
+		VG_FATAL("Shader compilation failed: %s", infoLog);
 	}
 
 	// 检查链接错误  
@@ -164,9 +172,8 @@ OpenVGRender::OpenVGRender()
 	{
 		GLchar infoLog[512];
 		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-		std::cerr << "Shader program linking failed: " << infoLog << std::endl;
 		glDeleteProgram(shaderProgram); // 删除程序，防止内存泄漏  
-		::exit(-1);
+		VG_FATAL("Shader program linking failed: %s", infoLog);
 	}
 	glDeleteShader(vshader);
 	glDeleteShader(fshader);

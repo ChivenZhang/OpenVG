@@ -1,3 +1,13 @@
+/*=================================================
+* Copyright © 2020-2025 ChivenZhang.
+* All Rights Reserved.
+* =====================Note=========================
+*
+*
+* ====================History=======================
+* Created by ChivenZhang@gmail.com.
+*
+* =================================================*/
 #include "../VGTessellate.h"
 #include <skia/core/SkPath.h>
 #include <skia/core/SkPaint.h>
