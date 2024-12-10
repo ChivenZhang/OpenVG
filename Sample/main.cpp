@@ -64,10 +64,15 @@ int main(int argc, char* argv[])
 	}
 	int w, h;
 	SDL_GetWindowSize(window, &w, &h);
+	float scale = SDL_GetWindowDisplayScale(window);
+
+	float dpi = SDL_GetWindowPixelDensity(window);
+	UI_INFO("%f %f", scale, dpi);
 
 	// Initialize OpenUI context
 
-	auto openui = UINew<UIContext>();
+	UIConfig config{ .ScaleFactor = scale };
+	auto openui = UINew<UIContext>(config);
 	auto painter = UINew<OpenUIPainter>(w, h);
 	auto render = UINew<OpenUIRender>();
 	openui->setPainter(painter);

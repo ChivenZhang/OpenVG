@@ -49,7 +49,7 @@ UIRect OpenVGPainter::boundingRect(float x, float y, float width, float height, 
 	auto& font = PRIVATE()->Font;
 
 	VGText shape;
-	shape.setSize(font.Size);
+	shape.setSize(font.Size * 96 / 72.0f);
 	shape.setFamily(font.Family);
 	shape.setSpacing(font.Spacing);
 	shape.setLineWrap(font.LineWrap);
@@ -90,7 +90,7 @@ UIRect OpenVGPainter::boundingRect(float x, float y, float width, float height, 
 	auto& font = PRIVATE()->Font;
 
 	VGText shape;
-	shape.setSize(font.Size);
+	shape.setSize(font.Size * 96 / 72.0f);
 	shape.setFamily(font.Family);
 	shape.setSpacing(font.Spacing);
 	shape.setLineWrap(font.LineWrap);
@@ -444,7 +444,7 @@ void OpenVGPainter::drawText(float x, float y, float width, float height, const 
 		auto& font = PRIVATE()->Font;
 
 		VGText shape;
-		shape.setSize(font.Size);
+		shape.setSize(font.Size * 96 / 72.0f);
 		shape.setFamily(font.Family);
 		shape.setSpacing(font.Spacing);
 		shape.setLineWrap(font.LineWrap);
@@ -546,6 +546,11 @@ void OpenVGPainter::translate(float dx, float dy)
 {
 }
 
+void OpenVGPainter::resize(uint32_t width, uint32_t height)
+{
+	PRIVATE()->Client = VGRect{ 0,0,(float)width,(float)height };
+}
+
 uint32_t OpenVGPainter::getWidth() const
 {
 	return PRIVATE()->Client.W;
@@ -564,11 +569,6 @@ uint32_t OpenVGPainter::getStride() const
 UIArrayView<const uint8_t> OpenVGPainter::getPixels() const
 {
 	return UIArrayView<const uint8_t>();
-}
-
-void OpenVGPainter::resize(uint32_t width, uint32_t height)
-{
-	PRIVATE()->Client = VGRect{ 0,0,(float)width,(float)height };
 }
 
 VGContextRaw OpenVGPainter::getVGContext() const
