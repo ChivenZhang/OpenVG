@@ -20,6 +20,7 @@ class OpenVGPainterData : public UIPainterPrivate
 {
 public:
 	VGRect Client;
+	uint32_t Density;
 	VGContextRef Context;
 	UIPen Pen;
 	UIFont Font;
@@ -31,9 +32,10 @@ public:
 #define PRIVATE() ((OpenVGPainterData*) m_Private)
 #define CONTEXT() (PRIVATE()->Context)
 
-OpenVGPainter::OpenVGPainter(uint32_t width, uint32_t height)
+OpenVGPainter::OpenVGPainter(uint32_t width, uint32_t height, uint32_t density)
 {
 	m_Private = new OpenVGPainterData;
+	PRIVATE()->Density = density;
 	PRIVATE()->Context = VGNew<VGContext>();
 	CONTEXT()->setPainter(VGNew<VGPainter>());
 	CONTEXT()->setRender(VGNew<OpenVGRender>());
@@ -49,7 +51,7 @@ UIRect OpenVGPainter::boundingRect(float x, float y, float width, float height, 
 	auto& font = PRIVATE()->Font;
 
 	VGText shape;
-	shape.setSize(font.Size * 96 / 72.0f);
+	shape.setSize(font.Size * PRIVATE()->Density / 72.0f);
 	shape.setFamily(font.Family);
 	shape.setSpacing(font.Spacing);
 	shape.setLineWrap(font.LineWrap);
@@ -90,7 +92,7 @@ UIRect OpenVGPainter::boundingRect(float x, float y, float width, float height, 
 	auto& font = PRIVATE()->Font;
 
 	VGText shape;
-	shape.setSize(font.Size * 96 / 72.0f);
+	shape.setSize(font.Size * PRIVATE()->Density / 72.0f);
 	shape.setFamily(font.Family);
 	shape.setSpacing(font.Spacing);
 	shape.setLineWrap(font.LineWrap);
@@ -444,7 +446,7 @@ void OpenVGPainter::drawText(float x, float y, float width, float height, const 
 		auto& font = PRIVATE()->Font;
 
 		VGText shape;
-		shape.setSize(font.Size * 96 / 72.0f);
+		shape.setSize(font.Size * PRIVATE()->Density / 72.0f);
 		shape.setFamily(font.Family);
 		shape.setSpacing(font.Spacing);
 		shape.setLineWrap(font.LineWrap);

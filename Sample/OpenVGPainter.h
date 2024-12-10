@@ -15,7 +15,7 @@
 class OpenVGPainter : public UIPainter
 {
 public:
-	OpenVGPainter(uint32_t width, uint32_t height);
+	OpenVGPainter(uint32_t width, uint32_t height, uint32_t density = 96);
 	~OpenVGPainter();
 	virtual UIRect boundingRect(float x, float y, float width, float height, UIString const& text, float cursor, UIRectRaw cursorRect) override;
 	virtual UIRect boundingRect(float x, float y, float width, float height, UIString const& text, float posX, float posY, int* cursor, UIRectRaw cursorRect) override;
