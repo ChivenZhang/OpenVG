@@ -63,30 +63,26 @@ int main(int argc, char* argv[])
 	}
 	int w, h;
 	SDL_GetWindowSize(window, &w, &h);
-	float scale = SDL_GetWindowDisplayScale(window);
-
-	float dpi = SDL_GetWindowPixelDensity(window);
-	UI_INFO("%f %f", scale, dpi);
+	float displayScale = SDL_GetWindowDisplayScale(window);
+	float pixelDensity = SDL_GetWindowPixelDensity(window);
 
 	// Initialize OpenUI context
 
-	UIConfig config{ .ScaleFactor = scale };
+	UIConfig config{ .DisplayScale = displayScale, .PixelDensity = pixelDensity };
 	auto openui = UINew<UIContext>(config);
-	auto painter = UINew<OpenUIPainter>(w, h);
-	auto render = UINew<OpenUIRender>();
-	openui->setPainter(painter);
-	openui->setRender(render);
+	openui->setRender(UINew<OpenUIRender>());
+	openui->setPainter(UINew<OpenUIPainter>(w, h, pixelDensity * 96));
 
 	// Run sample in event loop
 
 	sample(openui, window);
 
-	SDL_Event event;
 	bool running = true;
 	while (running)
 	{
 		// Send events to OpenUI
 
+		SDL_Event event;
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -238,8 +234,6 @@ int main(int argc, char* argv[])
 
 	// Clean up OpenUI and SDL
 
-	render = nullptr;
-	painter = nullptr;
 	openui = nullptr;
 	SDL_GL_DestroyContext(context);
 	SDL_DestroyWindow(window);

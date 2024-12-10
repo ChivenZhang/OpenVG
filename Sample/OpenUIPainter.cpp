@@ -17,9 +17,9 @@
 #include <OpenVG/VGPicture.h>
 #include <OpenVG/VGTrueType.h>
 
-OpenUIPainter::OpenUIPainter(uint32_t width, uint32_t height)
+OpenUIPainter::OpenUIPainter(uint32_t width, uint32_t height, uint32_t density)
 	:
-	OpenVGPainter(width, height)
+	OpenVGPainter(width, height, density)
 {
 	uint32_t texture = 0;
 	glGenTextures(1, &texture);
