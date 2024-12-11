@@ -80,7 +80,7 @@ OpenVGRender::OpenVGRender()
 			matrix_t MatrixList[];
 		};
 
-		layout (binding = 0) uniform sampler2D TextureList[16];
+		layout (binding = 0) uniform sampler2D TextureList[32];
 
 		uniform vec2 Viewport;
 	)";
@@ -247,8 +247,12 @@ void OpenVGRender::render(VGRect client, VGArrayView<const VGPrimitive> data)
 	m_PointList.clear(); m_StyleList.clear();
 	m_LinearList.clear(); m_RadialList.clear();
 	m_MatrixList.clear(); m_TextureList.clear();
-	static int32_t maxTextureUnits = 16;
-	if (maxTextureUnits == 0) glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+	static int32_t maxTextureUnits = 0;
+	if (maxTextureUnits == 0)
+	{
+		glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+		maxTextureUnits = std::clamp(maxTextureUnits, 1, 32);
+	}
 
 	for (size_t i = 0, k = 0; i < data.size(); ++i)
 	{
@@ -432,7 +436,7 @@ OpenVGTextures::texture_t OpenVGTextures::getTexture(VGImage image, bool glyph)
 			auto imageFormat = image.Type == VGImage::Float || image.Type == VGImage::HWFloat;
 			renderCreate(context, imageFormat, image.Width, image.Height);
 			int rect[4]{ 0, 0, image.Width, image.Height };
-			renderUpdate(context, imageFormat, rect, (uint8_t*)image.Pixel);
+			renderUpdate(context, rect, (uint8_t*)image.Pixel);
 			result = m_ImageTextureMap.emplace(image, context).first;
 		}
 		return texture_t{ result->second.Texture, {0, 0, 1, 1} };
@@ -443,10 +447,9 @@ OpenVGTextures::texture_t OpenVGTextures::getTexture(VGImage image, bool glyph)
 		{
 			renderCreate(m_FontStashTexture, 0, 512, 512);
 		}
-		auto result = m_GlyphTextureMap.find(image);
-		if (result == m_GlyphTextureMap.end())
+		auto result = m_GlyphTextureMap.emplace(image, context_t{ m_FontStashTexture.Texture, 0, 0, 0, image.Width, image.Height });
+		if (result.second)
 		{
-			result = m_GlyphTextureMap.emplace(image, context_t{ m_FontStashTexture.Texture, 0, 0, 0, image.Width, image.Height }).first;
 			VGList<VGRaw<context_t>> textureList;
 			VGList<VGRaw<const VGImage>> imageList;
 			for (auto& e : m_GlyphTextureMap)
@@ -455,14 +458,16 @@ OpenVGTextures::texture_t OpenVGTextures::getTexture(VGImage image, bool glyph)
 				textureList.push_back(&e.second);
 			}
 
+			int spacing = 1;
+
 			VGList<stbrp_rect> rects;
 			for (size_t i = 0; i < textureList.size(); ++i)
 			{
 				auto& texture = textureList[i];
 				auto& rect = rects.emplace_back();
 				rect.id = (int32_t)i;
-				rect.w = texture->W;
-				rect.h = texture->H;
+				rect.w = texture->W + spacing * 2;
+				rect.h = texture->H + spacing * 2;
 			}
 
 			do
@@ -475,15 +480,18 @@ OpenVGTextures::texture_t OpenVGTextures::getTexture(VGImage image, bool glyph)
 					delete[] nodes;
 					m_FontStashTexture.W *= 2;
 					m_FontStashTexture.H *= 2;
-					renderResize(m_FontStashTexture, 0, m_FontStashTexture.W, m_FontStashTexture.H);
+					renderResize(m_FontStashTexture, m_FontStashTexture.W, m_FontStashTexture.H);
 					continue;
 				}
+
+				renderClear(m_FontStashTexture);
 				for (size_t i = 0; i < rects.size(); ++i)
 				{
-					textureList[i]->X = rects[i].x;
-					textureList[i]->Y = rects[i].y;
-					int rect[4]{ rects[i].x, rects[i].y, rects[i].w, rects[i].h };
-					renderUpdate(m_FontStashTexture, 0, rect, (uint8_t*)imageList[i]->Pixel);
+					textureList[i]->X = rects[i].x + spacing;
+					textureList[i]->Y = rects[i].y + spacing;
+					int rect[4]{ textureList[i]->X, textureList[i]->Y, textureList[i]->W, textureList[i]->H };
+
+					renderUpdate(m_FontStashTexture, rect, (uint8_t*)imageList[i]->Pixel);
 				}
 
 				delete[] nodes;
@@ -491,11 +499,11 @@ OpenVGTextures::texture_t OpenVGTextures::getTexture(VGImage image, bool glyph)
 			} while (true);
 		}
 
-		auto x = result->second.X * 1.0f / m_FontStashTexture.W;
-		auto y = result->second.Y * 1.0f / m_FontStashTexture.H;
-		auto w = result->second.W * 1.0f / m_FontStashTexture.W;
-		auto h = result->second.H * 1.0f / m_FontStashTexture.H;
-		return texture_t{ result->second.Texture, {x, y, w, h} };
+		auto x = (result.first->second.X) * 1.0f / m_FontStashTexture.W;
+		auto y = (result.first->second.Y) * 1.0f / m_FontStashTexture.H;
+		auto w = (result.first->second.W) * 1.0f / m_FontStashTexture.W;
+		auto h = (result.first->second.H) * 1.0f / m_FontStashTexture.H;
+		return texture_t{ result.first->second.Texture, {x, y, w, h} };
 	}
 }
 
@@ -532,16 +540,16 @@ int OpenVGTextures::renderCreate(context_t& context, int format, int width, int 
 	return 1;
 }
 
-int OpenVGTextures::renderResize(context_t& context, int format, int width, int height)
+int OpenVGTextures::renderResize(context_t& context, int width, int height)
 {
-	return renderCreate(context, format, width, height);
+	return renderCreate(context, context.Format, width, height);
 }
 
-void OpenVGTextures::renderUpdate(context_t& context, int format, int* rect, const unsigned char* data)
+void OpenVGTextures::renderUpdate(context_t& context, int* rect, const unsigned char* data)
 {
 	if (context.Texture == 0) return;
 
-	if (format == 0)
+	if (context.Format == 0)
 	{
 		glBindTexture(GL_TEXTURE_2D, context.Texture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, rect[0], rect[1], rect[2], rect[3], GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -558,4 +566,23 @@ void OpenVGTextures::renderDelete(context_t& context)
 	if (context.Texture != 0)
 		glDeleteTextures(1, &context.Texture);
 	context.Texture = 0;
+}
+
+void OpenVGTextures::renderClear(context_t& context)
+{
+	if (context.Texture == 0) return;
+
+	uint32_t lastFbo = 0;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&lastFbo);
+
+	uint32_t fbo = 0;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context.Texture, 0);
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDeleteFramebuffers(1, &fbo);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, lastFbo);
 }

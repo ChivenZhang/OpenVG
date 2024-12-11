@@ -130,6 +130,7 @@ void OpenUIRender::render(UIRect client, UIArrayView<UIPrimitive> data)
 
 			// 绑定到纹理数组
 			auto texture = painter->getTexture();
+
 			glUseProgram(m_NativeProgram);
 			glActiveTexture(GL_TEXTURE0 + k);
 			glBindTexture(GL_TEXTURE_2D, texture);

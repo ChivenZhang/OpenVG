@@ -29,9 +29,10 @@ public:
 
 public:
 	int renderCreate(context_t& context, int format, int width, int height);
-	int renderResize(context_t& context, int format, int width, int height);
-	void renderUpdate(context_t& context, int format, int* rect, const unsigned char* data);
+	int renderResize(context_t& context, int width, int height);
+	void renderUpdate(context_t& context, int* rect, const unsigned char* data);
 	void renderDelete(context_t& context);
+	void renderClear(context_t& context);
 
 public:
 	static VGRaw<OpenVGTextures> Instance();

@@ -65,7 +65,7 @@ UIRect OpenVGPainter::boundingRect(float x, float y, float width, float height, 
 	VGRect rect = { x, y, width, height };
 	VGRect _cursorRect;
 	VGTrueType::Measure(&shape, rect, text, cursor, &_cursorRect, rect);
-	int32_t text_width = rect.W, text_height = rect.H, baseline = 0;
+	int32_t text_width = rect.W, text_height = shape.getSize(), baseline = 0;
 
 	if (font.Align & UIFont::AlignLeft) { rect.X = x; }
 	else if (font.Align & UIFont::AlignRight) { rect.X = x + width - text_width; }
@@ -107,7 +107,7 @@ UIRect OpenVGPainter::boundingRect(float x, float y, float width, float height, 
 	float _cursor;
 	VGRect _cursorRect;
 	VGTrueType::Measure(&shape, rect, text, posX - x, posY - y, &_cursor, &_cursorRect, rect);
-	int32_t text_width = rect.W, text_height = rect.H, baseline = 0;
+	int32_t text_width = rect.W, text_height = shape.getSize(), baseline = 0;
 
 	if (font.Align & UIFont::AlignLeft) { rect.X = x; }
 	else if (font.Align & UIFont::AlignRight) { rect.X = x + width - text_width; }
@@ -460,7 +460,7 @@ void OpenVGPainter::drawText(float x, float y, float width, float height, const 
 		VGRect rect = { x, y, width, height };
 		VGRect _cursorRect;
 		VGTrueType::Measure(&shape, rect, text, cursor, &_cursorRect, rect);
-		int32_t text_width = rect.W, text_height = rect.H, baseline = 0;
+		int32_t text_width = rect.W, text_height = shape.getSize(), baseline = 0;
 
 		if (font.Align & UIFont::AlignLeft) { rect.X = x; }
 		else if (font.Align & UIFont::AlignRight) { rect.X = x + width - text_width; }

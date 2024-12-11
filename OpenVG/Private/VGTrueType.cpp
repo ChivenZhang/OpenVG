@@ -458,13 +458,6 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 		auto glyphs = raqm_get_glyphs(raqm, &count);
 		if (count == 0 || glyphs == nullptr) break;
 
-		auto baseline = 0;
-		for (size_t i = 0; i < count; ++i)
-		{
-			auto face = glyphs[i].ftface;
-			if (FT_Load_Glyph(face, glyphs[i].index, FT_LOAD_NO_BITMAP)) continue;
-			baseline = std::max<float>(baseline, std::max<float>(0, face->glyph->metrics.height - face->glyph->metrics.horiBearingY));
-		}
 		for (size_t i = 0; i < count; ++i)
 		{
 			VGTextHash key;
@@ -475,11 +468,11 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 			if (result1 == s_FontImageMap.end())
 			{
 				auto face = glyphs[i].ftface;
-				auto slot = face->glyph;
 				if (FT_Load_Glyph(face, glyphs[i].index, FT_LOAD_COLOR)) continue;
-				if (FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL)) continue;
-				auto& _image = s_FontImageMap.emplace(key, VGTextHash::image_t()).first->second;
-				switch (slot->bitmap.pixel_mode)
+				if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL)) continue;
+
+				auto& image = s_FontImageMap.emplace(key, VGTextHash::image_t()).first->second;
+				switch (face->glyph->bitmap.pixel_mode)
 				{
 				case FT_PIXEL_MODE_MONO:
 				case FT_PIXEL_MODE_GRAY2:
@@ -493,8 +486,8 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 						if (FT_Bitmap_Convert(USING_FREETYPE.Library, bitmap, &converted_bitmap, 1)) break;
 						int width = converted_bitmap.width;
 						int height = converted_bitmap.rows;
-						_image.Pixel.resize(width * height * 4);
-						auto rgba_buffer = _image.Pixel.data();
+						image.Pixel.resize(width * height * 4);
+						auto rgba_buffer = image.Pixel.data();
 						for (int y = 0; y < height; y++)
 						{
 							for (int x = 0; x < width; x++)
@@ -515,8 +508,8 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 					auto bitmap = &face->glyph->bitmap;
 					int width = bitmap->width;
 					int height = bitmap->rows;
-					_image.Pixel.resize(width * height * 4);
-					auto rgba_buffer = _image.Pixel.data();
+					image.Pixel.resize(width * height * 4);
+					auto rgba_buffer = image.Pixel.data();
 					for (int y = 0; y < height; y++)
 					{
 						for (int x = 0; x < width; x++)
@@ -535,8 +528,8 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 					auto bitmap = &face->glyph->bitmap;
 					int width = bitmap->width / 3; // since each pixel has 3 components in FT_PIXEL_MODE_LCD
 					int height = bitmap->rows;
-					_image.Pixel.resize(width * height * 4);
-					auto rgba_buffer = _image.Pixel.data();
+					image.Pixel.resize(width * height * 4);
+					auto rgba_buffer = image.Pixel.data();
 					for (int y = 0; y < height; y++)
 					{
 						for (int x = 0; x < width; x++)
@@ -555,8 +548,8 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 					auto bitmap = &face->glyph->bitmap;
 					int width = bitmap->width;
 					int height = bitmap->rows / 3;  // since each pixel has 3 components in FT_PIXEL_MODE_LCD_V
-					_image.Pixel.resize(width * height * 4);
-					auto rgba_buffer = _image.Pixel.data();
+					image.Pixel.resize(width * height * 4);
+					auto rgba_buffer = image.Pixel.data();
 					for (int y = 0; y < height; y++)
 					{
 						for (int x = 0; x < width; x++)
@@ -575,8 +568,8 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 					auto bitmap = &face->glyph->bitmap;
 					int width = bitmap->width;
 					int height = bitmap->rows;
-					_image.Pixel.resize(width * height * 4);
-					auto rgba_buffer = _image.Pixel.data();
+					image.Pixel.resize(width * height * 4);
+					auto rgba_buffer = image.Pixel.data();
 					for (int y = 0; y < height; y++)
 					{
 						for (int x = 0; x < width; x++)
@@ -591,11 +584,11 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 					}
 				} break;
 				}
-				_image.Width = slot->bitmap.width;
-				_image.Height = slot->bitmap.rows;
-				_image.Stride = _image.Width * 4;	// has converted into RGBA format uniformly
-				_image.OffsetX = slot->metrics.horiBearingX;
-				_image.OffsetY = face->glyph->metrics.vertAdvance - face->glyph->metrics.horiBearingY;
+				image.Width = face->glyph->bitmap.width;
+				image.Height = face->glyph->bitmap.rows;
+				image.Stride = image.Width * 4;	// Converted into RGBA format uniformly
+				image.OffsetX = face->glyph->bitmap_left * 64;
+				image.OffsetY = element->getSize() * 64 - face->glyph->metrics.horiBearingY;
 			}
 		}
 
@@ -609,7 +602,7 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 			auto advanceX = glyphs[i].x_advance;
 			auto advanceY = glyphs[i].y_advance;
 
-			if (client.W <= (offset.X + advanceX) * FT_SCALE && element->getLineWrap())
+			if (0 < client.W && client.W <= (offset.X + advanceX) * FT_SCALE && element->getLineWrap())
 			{
 				offset.X = 0;
 				offset.Y += element->getSize() * 64 * (1.0f + element->getLineSpacing());
@@ -627,8 +620,8 @@ bool VGTrueType::Fill(VGTextRaw element, VGRect client, VGString const& text, VG
 					auto& _image = result1->second;
 					auto bearingX = result1->second.OffsetX;
 					auto bearingY = result1->second.OffsetY;
-					auto x = client.X + (offset.X + offsetX + bearingX) * FT_SCALE;
-					auto y = client.Y + (offset.Y + offsetY + bearingY - baseline) * FT_SCALE;
+					auto x = client.X + (offset.X + offsetX) * FT_SCALE;
+					auto y = client.Y + (offset.Y + offsetY + bearingY) * FT_SCALE;
 					auto w = (float)_image.Width, h = (float)_image.Height;
 					auto styleIndex = (int32_t)outStyles.size();
 					outPoints.push_back({ x, y, 0, 0, styleIndex, 0 });
@@ -780,7 +773,7 @@ bool VGTrueType::Measure(VGTextRaw element, VGRect client, VGString const& text,
 			auto advanceX = glyphs[i].x_advance;
 			auto advanceY = glyphs[i].y_advance;
 
-			if (client.W <= (offset.X + advanceX) * FT_SCALE && element->getLineWrap())
+			if (0 < client.W && client.W <= (offset.X + advanceX) * FT_SCALE && element->getLineWrap())
 			{
 				offset.X = 0;
 				offset.Y += element->getSize() * 64 * (1.0f + element->getLineSpacing());
@@ -927,7 +920,7 @@ bool VGTrueType::Measure(VGTextRaw element, VGRect client, VGString const& text,
 			auto advanceX = glyphs[i].x_advance;
 			auto advanceY = glyphs[i].y_advance;
 
-			if (client.W <= (offset.X + advanceX) * FT_SCALE && element->getLineWrap())
+			if (0 < client.W && client.W <= (offset.X + advanceX) * FT_SCALE && element->getLineWrap())
 			{
 				offset.X = 0;
 				offset.Y += element->getSize() * 64 * (1.0f + element->getLineSpacing());

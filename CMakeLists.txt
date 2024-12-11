@@ -16,6 +16,10 @@ else()
 link_directories(${OPENVG_SOURCE_DIR}/External/x64-windows/lib)
 endif()
 
+add_definitions(
+	-DOPENUI_FONT_FAMILY="微软雅黑,Segoe UI Emoji"
+)
+
 add_subdirectory (${OPENVG_SOURCE_DIR}/External/OpenUI)
 add_subdirectory ("OpenVG")
 add_subdirectory ("Sample")
