@@ -10,6 +10,10 @@ set(OPENVG_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "OpenVG Source Pa
 
 include_directories(${OPENVG_SOURCE_DIR})
 
+add_definitions(
+	-DOPENUI_FONT_FAMILY="微软雅黑,Segoe UI Emoji"
+)
+
 add_subdirectory (${OPENVG_SOURCE_DIR}/External/OpenUI)
 add_subdirectory ("OpenVG")
 add_subdirectory ("Sample")

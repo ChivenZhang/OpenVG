@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	auto window = SDL_CreateWindow("https://github.com/ChivenZhang/OpenUI.git", 1000, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	auto window = SDL_CreateWindow("https://github.com/ChivenZhang/OpenVG.git", 1000, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	if (window == nullptr)
 	{
 		UI_ERROR("Window could not be created! SDL_Error: %s", SDL_GetError());
@@ -259,6 +259,9 @@ void sample(UIContextRef context, SDL_Window* window)
 			auto label = UINew<UILabel>();
 			scroll->addElement(label);
 			label->setFixedSize(300, 300);
+			auto style = label->getStyle();
+			style.Normal.Foreground.Font.Align = UIFont::AlignTop | UIFont::AlignLeft;
+			label->setStyle(style);
 			label->setScaledContents(UILabel::ScaleKeepRatio);
 			int img_width, img_height, channels;
 			auto image_data = stbi_load("../../External/OpenUI/OpenUI.png", &img_width, &img_height, &channels, 4);
@@ -358,6 +361,9 @@ void sample(UIContextRef context, SDL_Window* window)
 			radio->setFixedSize(100, 30);
 			radio->setText("Radio");
 			radio->setChecked(true);
+			auto style = radio->getStyle();
+			style.Round = { 20, 20 };
+			radio->setStyle(style);
 
 			auto radio0 = UINew<UIRadio>();
 			group->addElement(radio0);
