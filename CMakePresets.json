@@ -1,0 +1,49 @@
+﻿{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Output/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT_CUSTOM}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+      }
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Output/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT_CUSTOM}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+      }
+    },
+    {
+      "name": "x64-osx-Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Output/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT_CUSTOM}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-osx",
+        "VCPKG_CMAKE_SYSTEM_NAME": "Darwin",
+        "VCPKG_OSX_ARCHITECTURES": "x86_64"
+      }
+    },
+    {
+      "name": "x64-osx-Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Output/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT_CUSTOM}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-osx",
+        "VCPKG_CMAKE_SYSTEM_NAME": "Darwin",
+        "VCPKG_OSX_ARCHITECTURES": "x86_64"
+      }
+    }
+  ]
+}

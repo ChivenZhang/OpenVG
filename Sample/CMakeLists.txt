@@ -2,41 +2,16 @@
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include_directories(${CMAKE_SOURCE_DIR}/External/OpenUI/External)
-include_directories(${CMAKE_SOURCE_DIR}/External/OpenUI/External/stb)
-include_directories(${CMAKE_SOURCE_DIR}/External/OpenUI/External/x64-windows/include)
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-link_directories(${CMAKE_SOURCE_DIR}/External/OpenUI/External/x64-windows/debug/lib)
-else()
-link_directories(${CMAKE_SOURCE_DIR}/External/OpenUI/External/x64-windows/lib)
-endif()
-
 add_executable (Sample "main.cpp" "OpenUIRender.h" "OpenUIPainter.h" "OpenUIRender.cpp" "OpenUIPainter.cpp" "OpenVGRender.h" "OpenVGRender.cpp" "SDL3InputEnum.h" "SDL3InputEnum.cpp" "OpenVGPainter.h" "OpenVGPainter.cpp")
 add_dependencies(Sample OpenUI OpenVG)
 
 target_include_directories(Sample PRIVATE ${CMAKE_SOURCE_DIR})
 target_include_directories(Sample PRIVATE ${OPENUI_SOURCE_DIR})
 
-target_link_libraries(Sample 
-	debug SDL3
-	debug GlU32 
-	debug glew32d
-	debug OpenGL32 
-	debug OpenUI
-	debug OpenVG
-)
-
-target_link_libraries(Sample 
-	optimized SDL3
-	optimized GlU32 
-	optimized glew32
-	optimized OpenGL32
-	optimized OpenUI
-	optimized OpenVG
-)
-
-add_custom_command(  
-    TARGET Sample POST_BUILD  
-    COMMAND "${CMAKE_SOURCE_DIR}/INSTALL.bat"
-    COMMENT "Copying dll to output directory"  
-)
+find_package(GLEW REQUIRED)
+target_link_libraries(Sample PRIVATE GLEW::GLEW)
+find_package(SDL3 CONFIG REQUIRED)
+target_link_libraries(Sample PRIVATE SDL3::SDL3)
+find_package(Stb REQUIRED)
+target_include_directories(Sample PRIVATE ${Stb_INCLUDE_DIR})
+target_link_libraries(Sample PRIVATE OpenUI OpenVG)

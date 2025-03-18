@@ -1,7 +1,6 @@
 #include <GL/glew.h>
 #define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include "OpenUIPainter.h"
 #include "OpenUIRender.h"
@@ -57,7 +56,7 @@ int main(int argc, char* argv[])
 	if (GLEW_OK != glewInitResult)
 	{
 		UI_ERROR("GLEW could not be initialized! %s", glewGetErrorString(glewInitResult));
-		SDL_GL_DeleteContext(context);
+		SDL_GL_DestroyContext(context);
 		SDL_DestroyWindow(window);
 		SDL_Quit();
 		return -1;
@@ -237,7 +236,7 @@ int main(int argc, char* argv[])
 	render = nullptr;
 	painter = nullptr;
 	openui = nullptr;
-	SDL_GL_DeleteContext(context);
+	SDL_GL_DestroyContext(context);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
@@ -459,7 +458,7 @@ void sample(UIContextRef context, SDL_Window* window)
 		input->setText("Hello,OpenUI");
 		input->editingStarted->connect(nullptr, [=](UIRect rect) {
 			SDL_StartTextInput(window);
-			SDL_Rect sdlRect{ rect.X, rect.Y, rect.W, rect.H };
+			SDL_Rect sdlRect{ (int)rect.X, (int)rect.Y, (int)rect.W, (int)rect.H };
 			SDL_SetTextInputArea(window, &sdlRect, 0);
 			});
 		input->textPasted->connect(nullptr, [=](UIString& value) {

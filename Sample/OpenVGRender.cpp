@@ -431,7 +431,7 @@ OpenVGTextures::texture_t OpenVGTextures::getTexture(VGImage image, bool glyph)
 			context_t context;
 			auto imageFormat = image.Type == VGImage::Float || image.Type == VGImage::HWFloat;
 			renderCreate(context, imageFormat, image.Width, image.Height);
-			int rect[4]{ 0, 0, image.Width, image.Height };
+			int rect[4]{ 0, 0, (int)image.Width, (int)image.Height };
 			renderUpdate(context, imageFormat, rect, (uint8_t*)image.Pixel);
 			result = m_ImageTextureMap.emplace(image, context).first;
 		}
