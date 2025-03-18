@@ -16,13 +16,15 @@
 #include <skia/core/SkPathEffect.h>
 #include <skia/effects/SkDashPathEffect.h>
 #include <skia/private/base/SkTemplates.h>
-#include <skia/gpu/ganesh/GrEagerVertexAllocator.h>
-#include <skia/gpu/ganesh/geometry/GrPathUtils.h>
-#include <skia/gpu/ganesh/geometry/GrTriangulator.h>
+#include <skia/src/gpu/ganesh/GrEagerVertexAllocator.h>
+#include <skia/src/gpu/ganesh/geometry/GrPathUtils.h>
+#include <skia/src/gpu/ganesh/geometry/GrTriangulator.h>
 
-class SimpleVertexAllocator : public GrEagerVertexAllocator {
+class SimpleVertexAllocator : public GrEagerVertexAllocator
+{
 public:
-	void* lock(size_t stride, int eagerCount) override {
+	void* lock(size_t stride, int eagerCount) override
+	{
 		SkASSERT(!fPoints);
 		SkASSERT(stride == sizeof(SkPoint));
 		fPoints.reset(eagerCount);

@@ -10,7 +10,6 @@
 *
 * =================================================*/
 #include <OpenVG/VGRender.h>
-#include <stb_rect_pack.h>
 
 class OpenVGTextures
 {

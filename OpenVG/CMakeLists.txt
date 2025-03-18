@@ -1,10 +1,10 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
 add_definitions(
-	-DOPENVG_SHARED_LIBRARY
+	# -DOPENVG_SHARED_LIBRARY
 )
 
-add_library (OpenVG SHARED 
+add_library (OpenVG STATIC
 	Private/VGContext.cpp
 	Private/VGElement.cpp
 	Private/VGGradient.cpp
@@ -29,103 +29,34 @@ add_library (OpenVG SHARED
 )
 
 target_include_directories(OpenVG PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/include)
-target_include_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/include/skia)
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/debug/lib)
-else()
-        target_link_directories(OpenVG PRIVATE ${OPENVG_SOURCE_DIR}/External/x64-windows-static-md/lib)
-endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_libraries(OpenVG PRIVATE
-		bentleyottmann
-		brotlicommon
-		brotlidec
-		brotlienc
-		bz2d
-		charset
-		fontconfig
-		freetyped
-		fribidi
-		getopt
-		GlU32
-		harfbuzz
-		harfbuzz-subset
-		iconv
-		icudtd
-		icuind
-		icuiod
-		icuucd
-		intl
-		jpeg
-		libexpatdMD
-		libpng16d
-		libsharpyuv
-		libwebp
-		libwebpdecoder
-		libwebpdemux
-		libwebpmux
-		OpenGL32
-		pthreadVC3d
-		pthreadVCE3d
-		pthreadVSE3d
-		raqm
-		skia
-		skottie
-		skparagraph
-		sksg
-		skshaper
-		skunicode_core
-		skunicode_icu
-		svg
-		turbojpeg
-		zlibd
-	)
-else()
-        target_link_libraries(OpenVG PRIVATE
-		bentleyottmann
-		brotlicommon
-		brotlidec
-		brotlienc
-		bz2
-		charset
-		fontconfig
-		freetype
-		fribidi
-		getopt
-		GlU32
-		harfbuzz
-		harfbuzz-subset
-		iconv
-		icudt
-		icuin
-		icuio
-		icuuc
-		intl
-		jpeg
-		libexpatMD
-		libpng16
-		libsharpyuv
-		libwebp
-		libwebpdecoder
-		libwebpdemux
-		libwebpmux
-		OpenGL32
-		pthreadVC3
-		pthreadVCE3
-		pthreadVSE3
-		raqm
-		skia
-		skottie
-		skparagraph
-		sksg
-		skshaper
-		skunicode_core
-		skunicode_icu
-		svg
-		turbojpeg
-		zlib
-	)
-endif()
+find_package(Fontconfig REQUIRED) # since CMake 3.14
+target_link_libraries(OpenVG PRIVATE Fontconfig::Fontconfig)
 
+find_package(harfbuzz CONFIG REQUIRED)
+# HarfBuzz font subsetter
+target_link_libraries(OpenVG PRIVATE harfbuzz::harfbuzz-subset)
+# HarfBuzz text shaping library
+target_link_libraries(OpenVG PRIVATE harfbuzz::harfbuzz)
+
+target_link_libraries(OpenVG PRIVATE raqm fribidi icudt icuin icuio icuuc)
+
+find_package(unofficial-skia CONFIG REQUIRED)
+target_link_libraries(OpenVG PRIVATE unofficial::skia::skia)
+
+# Similar for optional components, e.g. unofficial::skia::modules::skparagraph
+
+# Clipper2
+find_package(Clipper2 CONFIG REQUIRED)
+target_link_libraries(OpenVG PRIVATE Clipper2::Clipper2)
+
+# Clipper2Z
+find_package(Clipper2 CONFIG REQUIRED)
+target_link_libraries(OpenVG PRIVATE Clipper2::Clipper2Z)
+
+target_include_directories(OpenVG PUBLIC ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+	target_link_directories(OpenVG PRIVATE ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib)
+else()
+	target_link_directories(OpenVG PRIVATE ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib)
+endif()
